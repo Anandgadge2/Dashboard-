@@ -8,7 +8,7 @@ export interface Department {
   contactPerson?: string;
   contactEmail?: string;
   contactPhone?: string;
-  companyId: string;
+  companyId: string | { _id: string; name: string; companyId: string };
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

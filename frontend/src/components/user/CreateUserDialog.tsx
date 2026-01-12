@@ -38,6 +38,15 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    // Reset dependent fields when role changes
+    if (formData.role === 'COMPANY_ADMIN' || formData.role === 'SUPER_ADMIN') {
+      setFormData(prev => ({ ...prev, departmentId: '' }));
+    }
+    // DEPARTMENT_ADMIN and OPERATOR need both companyId and departmentId
+    // So we don't clear companyId for DEPARTMENT_ADMIN
+  }, [formData.role]);
+
   const fetchCompanies = async () => {
     try {
       const response = await companyAPI.getAll();
@@ -63,9 +72,24 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role) {
       toast.error('Please fill in all required fields');
       return;
+    }
+
+    // Role-specific validation
+    if (formData.role === 'SUPER_ADMIN') {
+      // SuperAdmin doesn't need companyId or departmentId
+    } else if (formData.role === 'COMPANY_ADMIN') {
+      if (!formData.companyId) {
+        toast.error('Please select a company');
+        return;
+      }
+    } else if (formData.role === 'DEPARTMENT_ADMIN' || formData.role === 'OPERATOR' || formData.role === 'ANALYTICS_VIEWER') {
+      if (!formData.companyId || !formData.departmentId) {
+        toast.error('Please select a company and department');
+        return;
+      }
     }
 
     setLoading(true);
@@ -89,7 +113,10 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
         toast.error('Failed to create user');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create user');
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create user';
+      console.error('User creation error:', error.response?.data);
+      console.error('Full error:', error);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -97,6 +124,27 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Clear department if role changes to Company Admin or SuperAdmin
+    if (name === 'role' && (value === 'COMPANY_ADMIN' || value === 'SUPER_ADMIN')) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        departmentId: ''
+      }));
+      return;
+    }
+    
+    // Clear department if company changes (for DEPARTMENT_ADMIN, OPERATOR, ANALYTICS_VIEWER)
+    if (name === 'companyId') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        departmentId: '' // Clear department when company changes
+      }));
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -200,40 +248,54 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="companyId">Company</Label>
-                <select
-                  id="companyId"
-                  name="companyId"
-                  value={formData.companyId}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select a company</option>
-                  {companies.map((company) => (
-                    <option key={company._id} value={company._id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="departmentId">Department</Label>
-                <select
-                  id="departmentId"
-                  name="departmentId"
-                  value={formData.departmentId}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select a department</option>
-                  {departments.map((department) => (
-                    <option key={department._id} value={department._id}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {formData.role !== 'SUPER_ADMIN' && (
+                <div>
+                  <Label htmlFor="companyId">Company {formData.role === 'COMPANY_ADMIN' || formData.role === 'DEPARTMENT_ADMIN' || formData.role === 'OPERATOR' || formData.role === 'ANALYTICS_VIEWER' ? '*' : ''}</Label>
+                  <select
+                    id="companyId"
+                    name="companyId"
+                    value={formData.companyId}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded-md"
+                    required={formData.role === 'COMPANY_ADMIN' || formData.role === 'DEPARTMENT_ADMIN' || formData.role === 'OPERATOR' || formData.role === 'ANALYTICS_VIEWER'}
+                  >
+                    <option value="">Select a company</option>
+                    {companies.map((company) => (
+                      <option key={company._id} value={company._id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {(formData.role === 'DEPARTMENT_ADMIN' || formData.role === 'OPERATOR' || formData.role === 'ANALYTICS_VIEWER') && (
+                <div>
+                  <Label htmlFor="departmentId">Department *</Label>
+                  <select
+                    id="departmentId"
+                    name="departmentId"
+                    value={formData.departmentId}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded-md"
+                    required
+                    disabled={!formData.companyId}
+                  >
+                    <option value="">{formData.companyId ? 'Select a department' : 'Select a company first'}</option>
+                    {departments
+                      .filter(dept => {
+                        if (!formData.companyId) return false;
+                        // Handle both string and object companyId
+                        const deptCompanyId = typeof dept.companyId === 'object' ? dept.companyId._id : dept.companyId;
+                        return deptCompanyId === formData.companyId;
+                      })
+                      .map((department) => (
+                        <option key={department._id} value={department._id}>
+                          {department.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

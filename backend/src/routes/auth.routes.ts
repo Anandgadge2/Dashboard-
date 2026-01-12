@@ -22,8 +22,11 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
-    // Find user with password
-    const user = await User.findOne({ email }).select('+password');
+    // Find user with password (include soft-deleted check)
+    const user = await User.findOne({ 
+      email: email.toLowerCase().trim(),
+      isDeleted: false 
+    }).select('+password');
 
     if (!user) {
       res.status(401).json({
@@ -43,6 +46,14 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Verify password
+    if (!user.password) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+      return;
+    }
+
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
@@ -89,7 +100,8 @@ router.post('/login', async (req: Request, res: Response) => {
           email: user.email,
           role: user.role,
           companyId: user.companyId,
-          departmentId: user.departmentId
+          departmentId: user.departmentId,
+          isActive: user.isActive
         },
         accessToken,
         refreshToken

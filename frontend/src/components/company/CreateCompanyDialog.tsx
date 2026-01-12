@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { companyAPI, CreateCompanyData } from '@/lib/api/company';
+import { companyAPI, CreateCompanyData, Company } from '@/lib/api/company';
 import toast from 'react-hot-toast';
 
 // Available modules
@@ -25,9 +25,10 @@ interface CreateCompanyDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onCompanyCreated: () => void;
+  editingCompany?: Company | null;
 }
 
-const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClose, onCompanyCreated }) => {
+const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClose, onCompanyCreated, editingCompany }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateCompanyData>({
     name: '',
@@ -50,23 +51,30 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
   });
   const [showAdminForm, setShowAdminForm] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.contactEmail || !formData.contactPhone) {
-      toast.error('Please fill in all required company fields');
-      return;
-    }
-
-    if (showAdminForm && (!formData.admin?.firstName || !formData.admin?.lastName || !formData.admin?.email || !formData.admin?.password)) {
-      toast.error('Please fill in all admin fields');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await companyAPI.create(formData);
-      toast.success('Company created successfully!');
+  useEffect(() => {
+    if (editingCompany) {
+      setFormData({
+        name: editingCompany.name,
+        companyType: editingCompany.companyType,
+        contactEmail: editingCompany.contactEmail,
+        contactPhone: editingCompany.contactPhone,
+        address: editingCompany.address || '',
+        enabledModules: editingCompany.enabledModules || [],
+        theme: editingCompany.theme || {
+          primaryColor: '#0f4c81',
+          secondaryColor: '#1a73e8'
+        },
+        admin: {
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          phone: ''
+        }
+      });
+      setShowAdminForm(false);
+    } else {
+      // Reset form for creating new company
       setFormData({
         name: '',
         companyType: 'GOVERNMENT',
@@ -87,10 +95,67 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
         }
       });
       setShowAdminForm(false);
-      onClose();
-      onCompanyCreated();
+    }
+  }, [editingCompany, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.contactEmail || !formData.contactPhone) {
+      toast.error('Please fill in all required company fields');
+      return;
+    }
+
+    if (showAdminForm && (!formData.admin?.firstName || !formData.admin?.lastName || !formData.admin?.email || !formData.admin?.password)) {
+      toast.error('Please fill in all admin fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let response;
+      if (editingCompany) {
+        // Update existing company
+        response = await companyAPI.update(editingCompany._id, formData);
+        if (response.success) {
+          toast.success('Company updated successfully!');
+        }
+      } else {
+        // Create new company
+        response = await companyAPI.create(formData);
+        if (response.success) {
+          toast.success('Company created successfully!');
+        }
+      }
+      
+      if (response.success) {
+        setFormData({
+          name: '',
+          companyType: 'GOVERNMENT',
+          contactEmail: '',
+          contactPhone: '',
+          address: '',
+          enabledModules: [],
+          theme: {
+            primaryColor: '#0f4c81',
+            secondaryColor: '#1a73e8'
+          },
+          admin: {
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            phone: ''
+          }
+        });
+        setShowAdminForm(false);
+        onClose();
+        onCompanyCreated();
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create company');
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save company';
+      console.error('Company save error:', error.response?.data);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -130,8 +195,8 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader>
-          <CardTitle>Create New Company</CardTitle>
-          <CardDescription>Add a new company to the platform</CardDescription>
+          <CardTitle>{editingCompany ? 'Edit Company' : 'Create New Company'}</CardTitle>
+          <CardDescription>{editingCompany ? 'Update company information' : 'Add a new company to the platform'}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -322,7 +387,7 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Company'}
+                {loading ? (editingCompany ? 'Updating...' : 'Creating...') : (editingCompany ? 'Update Company' : 'Create Company')}
               </Button>
             </div>
           </form>

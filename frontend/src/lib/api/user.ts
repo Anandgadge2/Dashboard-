@@ -8,8 +8,8 @@ export interface User {
   email: string;
   phone?: string;
   role: string;
-  companyId?: string;
-  departmentId?: string;
+  companyId?: string | { _id: string; name: string; companyId: string };
+  departmentId?: string | { _id: string; name: string; departmentId: string };
   isActive: boolean;
   isEmailVerified: boolean;
   createdAt: string;

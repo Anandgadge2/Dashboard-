@@ -13,6 +13,10 @@
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "seed:superadmin": "ts-node src/scripts/seedSuperAdmin.ts",
+    "ensure:superadmin": "ts-node src/scripts/ensureSuperAdmin.ts",
+    "seed:zpamaravati": "ts-node src/scripts/seedZPAmaravati.ts",
+    "seed:departments": "ts-node src/scripts/seedDepartments.ts",
+    "seed:users": "ts-node src/scripts/seedUsers.ts",
     "migrate": "ts-node src/scripts/migrate.ts"
   },
   "keywords": [

@@ -3,14 +3,15 @@ import Company from '../models/Company';
 import User from '../models/User';
 import { authenticate } from '../middleware/auth';
 import { requireSuperAdmin } from '../middleware/rbac';
+import { requireDatabaseConnection } from '../middleware/dbConnection';
 import { logUserAction } from '../utils/auditLogger';
 import { AuditAction, UserRole } from '../config/constants';
-import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication and database connection
 router.use(authenticate);
+router.use(requireDatabaseConnection);
 
 // @route   GET /api/companies
 // @desc    Get all companies (SuperAdmin only)
@@ -86,11 +87,10 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
     // Validate required fields
     if (!name || !companyType || !contactEmail || !contactPhone) {
       console.log('Validation failed: missing required fields');
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: 'Please provide all required company fields'
       });
-      return;
     }
 
     console.log('Creating company with data:', { name, companyType, contactEmail, contactPhone });
@@ -119,25 +119,27 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
     let adminUser = null;
     if (admin && admin.email && admin.password && admin.firstName && admin.lastName) {
       console.log('Creating admin user for company:', admin.email);
-      
-      // Hash password
-      const salt = await bcrypt.genSalt(12);
-      const hashedPassword = await bcrypt.hash(admin.password, salt);
 
-      // Create admin user
-      adminUser = await User.create({
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        password: hashedPassword,
-        phone: admin.phone || contactPhone,
-        role: UserRole.COMPANY_ADMIN,
-        companyId: company._id,
-        isActive: true,
-        isEmailVerified: true
-      });
+      try {
+        // Create admin user (password will be hashed by pre-save hook)
+        adminUser = await User.create({
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          email: admin.email,
+          password: admin.password, // Pre-save hook will hash this
+          phone: admin.phone || contactPhone,
+          role: UserRole.COMPANY_ADMIN,
+          companyId: company._id,
+          isActive: true,
+          isEmailVerified: true
+        });
 
-      console.log('Admin user created successfully:', adminUser._id);
+        console.log('Admin user created successfully:', adminUser._id);
+      } catch (userError: any) {
+        console.error('Failed to create admin user:', userError);
+        // Don't fail the whole company creation if admin creation fails
+        console.warn('Company created but admin user creation failed');
+      }
     }
 
     // Log company creation
@@ -177,7 +179,7 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
     }
 
     console.log('Sending successful response');
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Company created successfully' + (adminUser ? ' with admin user' : ''),
       data: { 
@@ -196,9 +198,45 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Company creation error:', error);
     console.error('Error stack:', error.stack);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to create company',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/companies/me
+// @desc    Get current user's company (for CompanyAdmin)
+// @access  Private/CompanyAdmin
+router.get('/me', authenticate, async (req: Request, res: Response) => {
+  try {
+    const currentUser = req.user!;
+
+    if (!currentUser.companyId) {
+      return res.status(404).json({
+        success: false,
+        message: 'You are not associated with any company'
+      });
+    }
+
+    const company = await Company.findById(currentUser.companyId);
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: 'Company not found'
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: { company }
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch company',
       error: error.message
     });
   }
@@ -212,19 +250,18 @@ router.get('/:id', requireSuperAdmin, async (req: Request, res: Response) => {
     const company = await Company.findById(req.params.id);
 
     if (!company) {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: 'Company not found'
       });
-      return;
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { company }
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch company',
       error: error.message
@@ -244,11 +281,10 @@ router.put('/:id', requireSuperAdmin, async (req: Request, res: Response) => {
     );
 
     if (!company) {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: 'Company not found'
       });
-      return;
     }
 
     await logUserAction(
@@ -259,13 +295,13 @@ router.put('/:id', requireSuperAdmin, async (req: Request, res: Response) => {
       { updates: req.body }
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Company updated successfully',
       data: { company }
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update company',
       error: error.message
@@ -289,11 +325,10 @@ router.delete('/:id', requireSuperAdmin, async (req: Request, res: Response) => 
     );
 
     if (!company) {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
         message: 'Company not found'
       });
-      return;
     }
 
     await logUserAction(
@@ -303,12 +338,12 @@ router.delete('/:id', requireSuperAdmin, async (req: Request, res: Response) => 
       company._id.toString()
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Company deleted successfully'
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to delete company',
       error: error.message

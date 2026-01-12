@@ -15,6 +15,7 @@ interface User {
   role: string;
   companyId?: string;
   departmentId?: string;
+  isActive: boolean;
 }
 
 interface AuthContextType {
@@ -52,9 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         apiClient.setToken(accessToken);
         apiClient.setRefreshToken(refreshToken);
         
-        // Save user
-        authAPI.saveUser(user);
-        setUser(user);
+        // Save user with all properties
+        const userWithActive = {
+          ...user,
+          isActive: user.isActive ?? true // Default to true if not provided
+        };
+        authAPI.saveUser(userWithActive);
+        setUser(userWithActive);
         
         toast.success('Login successful!');
         
@@ -79,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     authAPI.logout();
     setUser(null);
-    router.push('/login');
+    router.push('/');
   };
 
   return (

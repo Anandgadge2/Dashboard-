@@ -87,6 +87,10 @@ export const companyAPI = {
     return apiClient.get(`/companies/${id}`);
   },
 
+  getMyCompany: async (): Promise<{ success: boolean; data: { company: Company } }> => {
+    return apiClient.get('/companies/me');
+  },
+
   create: async (data: CreateCompanyData): Promise<{ success: boolean; data: { company: Company } }> => {
     return apiClient.post('/companies', data);
   },

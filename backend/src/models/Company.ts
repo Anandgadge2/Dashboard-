@@ -19,6 +19,27 @@ export interface ICompany extends Document {
     accessToken: string;
     businessAccountId: string;
   };
+  chatbotConfig?: {
+    flows: Array<{
+      id: string;
+      name: string;
+      triggers: string[];
+      steps: Array<{
+        id: string;
+        type: string;
+        question?: string;
+        action?: string;
+        response?: string;
+        nextStepId?: string;
+        validation?: {
+          type: string;
+          required: boolean;
+        };
+      }>;
+      defaultResponse?: string;
+    }>;
+    enabled: boolean;
+  };
   isActive: boolean;
   isSuspended: boolean;
   isDeleted: boolean;
@@ -32,7 +53,7 @@ const CompanySchema: Schema = new Schema(
   {
     companyId: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
       index: true
     },
@@ -81,6 +102,30 @@ const CompanySchema: Schema = new Schema(
       phoneNumberId: String,
       accessToken: String,
       businessAccountId: String
+    },
+    chatbotConfig: {
+      flows: [{
+        id: String,
+        name: String,
+        triggers: [String],
+        steps: [{
+          id: String,
+          type: String,
+          question: String,
+          action: String,
+          response: String,
+          nextStepId: String,
+          validation: {
+            type: String,
+            required: Boolean
+          }
+        }],
+        defaultResponse: String
+      }],
+      enabled: {
+        type: Boolean,
+        default: true
+      }
     },
     isActive: {
       type: Boolean,

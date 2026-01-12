@@ -2,13 +2,15 @@ import express, { Request, Response } from 'express';
 import User from '../models/User';
 import { authenticate } from '../middleware/auth';
 import { requirePermission } from '../middleware/rbac';
+import { requireDatabaseConnection } from '../middleware/dbConnection';
 import { logUserAction } from '../utils/auditLogger';
 import { AuditAction, Permission, UserRole } from '../config/constants';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication and database connection
 router.use(authenticate);
+router.use(requireDatabaseConnection);
 
 // @route   GET /api/users
 // @desc    Get all users (scoped by role)
@@ -90,69 +92,183 @@ router.get('/', requirePermission(Permission.READ_USER), async (req: Request, re
 // @access  Private
 router.post('/', requirePermission(Permission.CREATE_USER), async (req: Request, res: Response) => {
   try {
+    console.log('📝 User creation request received');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const currentUser = req.user!;
+    console.log('Current user:', { id: currentUser._id, role: currentUser.role, companyId: currentUser.companyId });
+    
     const { firstName, lastName, email, password, phone, role, companyId, departmentId } = req.body;
 
     // Validation
     if (!firstName || !lastName || !email || !password || !role) {
-      res.status(400).json({
+      console.log('❌ Validation failed: Missing required fields');
+      return res.status(400).json({
         success: false,
         message: 'Please provide all required fields'
       });
-      return;
     }
+    console.log('✅ Basic validation passed');
 
     // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(400).json({
+      console.log('❌ User with email already exists:', email);
+      return res.status(400).json({
         success: false,
         message: 'User with this email already exists'
       });
-      return;
     }
+    console.log('✅ Email is unique');
 
-    // Scope validation
+    // Scope validation and role-specific requirements
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
+      console.log('Checking COMPANY_ADMIN scope:', { requestedCompanyId: companyId, userCompanyId: currentUser.companyId?.toString() });
       // CompanyAdmin can only create users in their company
       if (companyId !== currentUser.companyId?.toString()) {
-        res.status(403).json({
+        console.log('❌ Scope validation failed for COMPANY_ADMIN');
+        return res.status(403).json({
           success: false,
           message: 'You can only create users for your own company'
         });
-        return;
+      }
+      // CompanyAdmin cannot create SuperAdmin
+      if (role === UserRole.SUPER_ADMIN) {
+        return res.status(403).json({
+          success: false,
+          message: 'You cannot create SuperAdmin users'
+        });
       }
     } else if (currentUser.role === UserRole.DEPARTMENT_ADMIN) {
+      console.log('Checking DEPARTMENT_ADMIN scope:', { requestedDepartmentId: departmentId, userDepartmentId: currentUser.departmentId?.toString() });
       // DepartmentAdmin can only create users in their department
       if (departmentId !== currentUser.departmentId?.toString()) {
-        res.status(403).json({
+        console.log('❌ Scope validation failed for DEPARTMENT_ADMIN');
+        return res.status(403).json({
           success: false,
           message: 'You can only create users for your own department'
         });
-        return;
+      }
+      // DepartmentAdmin should use their companyId
+      if (companyId && companyId !== currentUser.companyId?.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only create users for your own company'
+        });
+      }
+      // Auto-set companyId from department if not provided
+      if (!companyId && currentUser.companyId) {
+        companyId = currentUser.companyId.toString();
+      }
+      // DepartmentAdmin cannot create SuperAdmin or CompanyAdmin
+      if (role === UserRole.SUPER_ADMIN || role === UserRole.COMPANY_ADMIN) {
+        return res.status(403).json({
+          success: false,
+          message: 'You cannot create users with this role'
+        });
       }
     }
+    
+    // Role-specific field requirements
+    if (role === UserRole.COMPANY_ADMIN && !companyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company ID is required for Company Admin'
+      });
+    }
+    
+    if ((role === UserRole.DEPARTMENT_ADMIN || role === UserRole.OPERATOR || role === UserRole.ANALYTICS_VIEWER) && (!companyId || !departmentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both Company ID and Department ID are required for this role'
+      });
+    }
+    
+    console.log('✅ Scope validation passed');
 
-    const user = await User.create({
-      firstName,
-      lastName,
-      email,
-      password,
-      phone,
-      role,
-      companyId,
-      departmentId
-    });
+    // For DEPARTMENT_ADMIN, OPERATOR, ANALYTICS_VIEWER: get companyId from department if not provided
+    let finalCompanyId = companyId;
+    if (departmentId && !finalCompanyId) {
+      const Department = (await import('../models/Department')).default;
+      const department = await Department.findById(departmentId);
+      if (department) {
+        finalCompanyId = department.companyId.toString();
+        console.log('✅ Auto-set companyId from department:', finalCompanyId);
+      }
+    }
+    
+    console.log('Creating user with data:', { firstName, lastName, email, role, companyId: finalCompanyId, departmentId });
+    
+    // Database connection is already checked by middleware
 
-    await logUserAction(
-      req,
-      AuditAction.CREATE,
-      'User',
-      user._id.toString(),
-      { userName: user.getFullName(), email: user.email }
-    );
+    // Create user in database
+    let user;
+    try {
+      user = await User.create({
+        firstName,
+        lastName,
+        email: email.toLowerCase().trim(),
+        password,
+        phone,
+        role,
+        companyId: finalCompanyId || undefined,
+        departmentId: departmentId || undefined,
+        isActive: true,
+        isDeleted: false
+      });
+      console.log('✅ User created successfully in database:', user.userId);
+      console.log('✅ User ID:', user._id);
+      console.log('✅ User companyId:', user.companyId);
+      console.log('✅ User departmentId:', user.departmentId);
+    } catch (dbError: any) {
+      console.error('❌ Database save error:', dbError);
+      console.error('Error name:', dbError.name);
+      console.error('Error code:', dbError.code);
+      console.error('Error message:', dbError.message);
+      
+      // Handle duplicate key error
+      if (dbError.code === 11000) {
+        const field = Object.keys(dbError.keyPattern || {})[0];
+        return res.status(400).json({
+          success: false,
+          message: `User with this ${field} already exists`,
+          error: dbError.message
+        });
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save user to database',
+        error: dbError.message
+      });
+    }
 
-    res.status(201).json({
+    // Verify user was saved
+    const savedUser = await User.findById(user._id);
+    if (!savedUser) {
+      console.error('❌ User was not saved to database');
+      return res.status(500).json({
+        success: false,
+        message: 'User creation failed - user not found in database'
+      });
+    }
+    console.log('✅ Verified user exists in database:', savedUser.userId);
+
+    // Audit logging - don't let this fail the request
+    try {
+      await logUserAction(
+        req,
+        AuditAction.CREATE,
+        'User',
+        user._id.toString(),
+        { userName: user.getFullName(), email: user.email }
+      );
+      console.log('✅ Audit log created');
+    } catch (auditError: any) {
+      console.error('⚠️  Audit logging failed (non-critical):', auditError.message);
+    }
+
+    return res.status(201).json({
       success: true,
       message: 'User created successfully',
       data: {
@@ -162,12 +278,17 @@ router.post('/', requirePermission(Permission.CREATE_USER), async (req: Request,
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          role: user.role
+          role: user.role,
+          isActive: user.isActive
         }
       }
     });
   } catch (error: any) {
-    res.status(500).json({
+    console.error('❌ User creation error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({
       success: false,
       message: 'Failed to create user',
       error: error.message

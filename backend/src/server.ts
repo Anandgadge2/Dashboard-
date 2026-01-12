@@ -12,19 +12,22 @@ import { logger } from './config/logger';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
-import companyRoutes from './routes/company.routes.js';
-import departmentRoutes from './routes/department.routes.js';
-import userRoutes from './routes/user.routes.js';
-import grievanceRoutes from './routes/grievance.routes.js';
-import appointmentRoutes from './routes/appointment.routes.js';
-import analyticsRoutes from './routes/analytics.routes.js';
-import whatsappRoutes from './routes/whatsapp.routes.js';
-import importRoutes from './routes/import.routes.js';
-import auditRoutes from './routes/audit.routes.js';
+import healthRoutes from './routes/health.routes';
+import companyRoutes from './routes/company.routes';
+import departmentRoutes from './routes/department.routes';
+import userRoutes from './routes/user.routes';
+import grievanceRoutes from './routes/grievance.routes';
+import appointmentRoutes from './routes/appointment.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import whatsappRoutes from './routes/whatsapp.routes';
+import importRoutes from './routes/import.routes';
+import exportRoutes from './routes/export.routes';
+import auditRoutes from './routes/audit.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 // Import middleware
-import { errorHandler } from './middleware/errorHandler.js';
-import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler';
+import { notFoundHandler } from './middleware/notFoundHandler';
 
 // Load environment variables
 dotenv.config();
@@ -36,12 +39,36 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // ================================
 
-// Security
-app.use(helmet());
+// Security - Configure helmet to allow WhatsApp webhook requests
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for webhook endpoints
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow cross-origin requests from WhatsApp
+}));
 
-// CORS
+// CORS - Allow WhatsApp webhook requests
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, WhatsApp webhooks)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'https://graph.facebook.com',
+      'https://*.facebook.com',
+      'https://*.whatsapp.com'
+    ];
+    
+    // Check if origin matches any allowed pattern
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace('*', '.*');
+        return new RegExp(pattern).test(origin);
+      }
+      return origin === allowed;
+    });
+    
+    callback(null, isAllowed);
+  },
   credentials: true
 }));
 
@@ -60,7 +87,7 @@ if (process.env.NODE_ENV === 'development') {
 // Routes
 // ================================
 
-// Health check
+// Health check (basic)
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'OK',
@@ -86,14 +113,21 @@ app.get('/', (_req: Request, res: Response) => {
       grievances: '/api/grievances',
       appointments: '/api/appointments',
       analytics: '/api/analytics',
-      webhook: '/api/webhook/whatsapp',
+      webhook: '/webhook or /api/webhook/whatsapp (GET for verification, POST for messages)',
       import: '/api/import',
+      export: '/api/export',
       audit: '/api/audit'
     }
   });
 });
 
+// Webhook routes (must be before /api routes to avoid middleware blocking)
+// These routes should NOT have authentication or other middleware that might block WhatsApp
+app.use('/webhook', whatsappRoutes);
+app.use('/api/webhook/whatsapp', whatsappRoutes);
+
 // API routes
+app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -101,9 +135,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/grievances', grievanceRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/webhook/whatsapp', whatsappRoutes);
 app.use('/api/import', importRoutes);
+app.use('/api/export', exportRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // ================================
 // Error Handling
@@ -123,21 +158,25 @@ const startServer = async () => {
   let mongoConnected = false;
   let redisConnected = false;
 
-  // Try to connect to MongoDB (non-blocking)
+  // Try to connect to MongoDB (CRITICAL - server should not start without DB)
   try {
     await connectDatabase();
     mongoConnected = true;
     logger.info('✅ MongoDB connected successfully');
   } catch (error: any) {
     logger.error('❌ MongoDB connection failed:', error.message);
-    logger.warn('⚠️  Server will start WITHOUT MongoDB connection');
-    logger.warn('⚠️  Database operations will fail until connection is established');
-    logger.warn('');
-    logger.warn('💡 To fix this:');
-    logger.warn('   1. Check your internet connection');
-    logger.warn('   2. Verify MONGODB_URI in .env file');
-    logger.warn('   3. See NETWORK_TROUBLESHOOTING.md for detailed help');
-    logger.warn('');
+    logger.error('');
+    logger.error('🚨 CRITICAL: Server cannot function without database connection!');
+    logger.error('');
+    logger.error('💡 To fix this:');
+    logger.error('   1. Check your internet connection');
+    logger.error('   2. Verify MONGODB_URI in .env file');
+    logger.error('   3. Check MongoDB Atlas network access (if using Atlas)');
+    logger.error('   4. Verify database credentials');
+    logger.error('');
+    logger.error('⚠️  Server will start but database operations will fail!');
+    logger.error('⚠️  Please fix the database connection and restart the server.');
+    logger.error('');
   }
 
   // Try to connect to Redis (optional, non-blocking)

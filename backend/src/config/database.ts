@@ -6,8 +6,24 @@ export const connectDatabase = async (): Promise<void> => {
     const mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri) {
-      throw new Error('MONGODB_URI is not defined in environment variables');
+      const error = new Error('MONGODB_URI is not defined in environment variables');
+      logger.error('❌ ' + error.message);
+      logger.error('💡 Please create a .env file in the backend directory with:');
+      logger.error('   MONGODB_URI=mongodb://localhost:27017/dashboard');
+      logger.error('   or');
+      logger.error('   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
+      throw error;
     }
+
+    // Check if already connected
+    if (mongoose.connection.readyState === 1) {
+      logger.info('✅ MongoDB already connected');
+      return;
+    }
+
+    // Sanitize URI for logging (hide password)
+    const safeUri = mongoUri.replace(/:([^@]+)@/, ':****@');
+    logger.info(`🔌 Connecting to MongoDB: ${safeUri}`);
 
     const options = {
       maxPoolSize: 10,
@@ -19,8 +35,17 @@ export const connectDatabase = async (): Promise<void> => {
 
     await mongoose.connect(mongoUri, options);
 
+    // Verify connection
+    if (mongoose.connection.readyState === 1) {
+      logger.info('✅ MongoDB connection established successfully');
+      logger.info(`   Database: ${mongoose.connection.name || 'default'}`);
+      logger.info(`   Host: ${mongoose.connection.host}:${mongoose.connection.port || 'default'}`);
+    } else {
+      throw new Error('Connection established but readyState is not 1');
+    }
+
     mongoose.connection.on('connected', () => {
-      logger.info('✅ MongoDB connection established');
+      logger.info('✅ MongoDB connection event: connected');
     });
 
     mongoose.connection.on('error', (err) => {
@@ -31,10 +56,36 @@ export const connectDatabase = async (): Promise<void> => {
       logger.warn('⚠️  MongoDB disconnected');
     });
 
-  } catch (error) {
-    logger.error('❌ Failed to connect to MongoDB:', error);
+  } catch (error: any) {
+    logger.error('❌ Failed to connect to MongoDB:', error.message);
+    
+    // Provide helpful error messages
+    if (error.message.includes('MONGODB_URI')) {
+      // Already handled above
+    } else if (error.message.includes('ETIMEOUT') || error.message.includes('querySrv')) {
+      logger.error('💡 Network/DNS timeout. Check:');
+      logger.error('   1. Internet connection');
+      logger.error('   2. VPN/Firewall settings');
+      logger.error('   3. MongoDB Atlas cluster status');
+    } else if (error.message.includes('IP') || error.message.includes('whitelist')) {
+      logger.error('💡 IP Whitelist issue. Fix:');
+      logger.error('   1. Go to MongoDB Atlas → Network Access');
+      logger.error('   2. Add IP: 0.0.0.0/0 (allow all)');
+    } else if (error.message.includes('authentication failed')) {
+      logger.error('💡 Authentication failed. Check:');
+      logger.error('   1. Username and password in MONGODB_URI');
+      logger.error('   2. Database user exists in MongoDB Atlas');
+    }
+    
     throw error;
   }
+};
+
+/**
+ * Check if database is connected
+ */
+export const isDatabaseConnected = (): boolean => {
+  return mongoose.connection.readyState === 1;
 };
 
 // Export closeDatabase for graceful shutdown

@@ -2,13 +2,15 @@ import express, { Request, Response } from 'express';
 import Grievance from '../models/Grievance';
 import { authenticate } from '../middleware/auth';
 import { requirePermission } from '../middleware/rbac';
+import { requireDatabaseConnection } from '../middleware/dbConnection';
 import { logUserAction } from '../utils/auditLogger';
 import { AuditAction, Permission, UserRole, GrievanceStatus } from '../config/constants';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication and database connection
 router.use(authenticate);
+router.use(requireDatabaseConnection);
 
 // @route   GET /api/grievances
 // @desc    Get all grievances (scoped by role)

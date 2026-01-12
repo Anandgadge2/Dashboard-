@@ -27,7 +27,7 @@ const UserSchema: Schema = new Schema(
   {
     userId: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
       index: true
     },

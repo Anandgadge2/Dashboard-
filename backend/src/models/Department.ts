@@ -20,7 +20,7 @@ const DepartmentSchema: Schema = new Schema(
   {
     departmentId: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
       index: true
     },

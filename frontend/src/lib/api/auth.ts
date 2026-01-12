@@ -18,6 +18,7 @@ export interface LoginResponse {
       role: string;
       companyId?: string;
       departmentId?: string;
+      isActive: boolean;
     };
     accessToken: string;
     refreshToken: string;

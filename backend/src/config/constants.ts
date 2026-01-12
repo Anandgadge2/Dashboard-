@@ -15,6 +15,7 @@ export enum UserRole {
 // ================================
 
 export enum CompanyType {
+  GOVERNMENT = 'GOVERNMENT',
   GOV_GRIEVANCE = 'GOV_GRIEVANCE',
   SERVICE_BOOKING = 'SERVICE_BOOKING',
   SURVEY_FEEDBACK = 'SURVEY_FEEDBACK',

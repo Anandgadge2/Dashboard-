@@ -9,10 +9,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { companyAPI, Company } from '@/lib/api/company';
 import { departmentAPI, Department } from '@/lib/api/department';
 import { userAPI, User } from '@/lib/api/user';
+import { apiClient } from '@/lib/api/client';
 import CreateCompanyDialog from '@/components/company/CreateCompanyDialog';
 import CreateDepartmentDialog from '@/components/department/CreateDepartmentDialog';
 import CreateUserDialog from '@/components/user/CreateUserDialog';
 import toast from 'react-hot-toast';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
+
+const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+
+// Helper function to get company display text
+const getCompanyDisplay = (companyId: string | { _id: string; name: string; companyId: string }): string => {
+  if (typeof companyId === 'object' && companyId !== null) {
+    return `${companyId.name} (${companyId.companyId})`;
+  }
+  return companyId;
+};
+
 
 export default function SuperAdminDashboard() {
   const { user, loading, logout } = useAuth();
@@ -23,6 +36,18 @@ export default function SuperAdminDashboard() {
   const [companiesLoading, setCompaniesLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState({
+    companies: 0,
+    users: 0,
+    departments: 0,
+    activeCompanies: 0,
+    activeUsers: 0,
+    totalSessions: 0,
+    systemStatus: 'operational'
+  });
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDepartmentDialog, setShowDepartmentDialog] = useState(false);
   const [showUserDialog, setShowUserDialog] = useState(false);
@@ -75,13 +100,87 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      // Get real-time stats from database
+      const companiesResponse = await companyAPI.getAll();
+      const usersResponse = await userAPI.getAll();
+      const departmentsResponse = await departmentAPI.getAll();
+
+      const companies = companiesResponse.success ? companiesResponse.data.companies : [];
+      const users = usersResponse.success ? usersResponse.data.users : [];
+      const departments = departmentsResponse.success ? departmentsResponse.data.departments : [];
+
+      const activeCompanies = companies.filter(c => c.isActive).length;
+      const activeUsers = users.filter(u => u.isActive).length;
+
+      setStats({
+        companies: companies.length,
+        users: users.length,
+        departments: departments.length,
+        activeCompanies,
+        activeUsers,
+        totalSessions: Math.floor(Math.random() * 100) + 50, // Mock data for now
+        systemStatus: 'operational'
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    setLoadingAnalytics(true);
+    try {
+      const response = await apiClient.get('/analytics/dashboard');
+      if (response.success) {
+        setAnalyticsData(response.data);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch analytics:', error);
+      toast.error('Failed to load analytics');
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  };
+
+  const handleDeleteCompany = async (companyId: string) => {
+    if (!confirm('Are you sure you want to delete this company?')) {
+      return;
+    }
+
+    try {
+      const response = await companyAPI.delete(companyId);
+      if (response.success) {
+        toast.success('Company deleted successfully');
+        fetchCompanies();
+      } else {
+        toast.error('Failed to delete company');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete company');
+    }
+  };
+
+  const handleEditCompany = (company: Company) => {
+    setEditingCompany(company);
+    setShowCreateDialog(true);
+  };
+
   useEffect(() => {
     if (mounted && user) {
       fetchCompanies();
       fetchDepartments();
       fetchUsers();
+      fetchStats();
+      fetchAnalytics();
     }
   }, [mounted, user]);
+
+  useEffect(() => {
+    if (activeTab === 'analytics' && mounted && user) {
+      fetchAnalytics();
+    }
+  }, [activeTab, mounted, user]);
 
   if (loading || !mounted) {
     return (
@@ -125,11 +224,12 @@ export default function SuperAdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="companies">Companies</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="audit">Audit Logs</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -148,8 +248,8 @@ export default function SuperAdminDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-4xl font-bold">0</p>
-                  <p className="text-blue-100 text-sm mt-2">Active companies</p>
+                  <p className="text-4xl font-bold">{stats.companies}</p>
+                  <p className="text-blue-100 text-sm mt-2">{stats.activeCompanies} active</p>
                 </CardContent>
               </Card>
 
@@ -163,8 +263,8 @@ export default function SuperAdminDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-4xl font-bold">1</p>
-                  <p className="text-green-100 text-sm mt-2">Registered users</p>
+                  <p className="text-4xl font-bold">{stats.users}</p>
+                  <p className="text-green-100 text-sm mt-2">{stats.activeUsers} active</p>
                 </CardContent>
               </Card>
 
@@ -172,14 +272,14 @@ export default function SuperAdminDashboard() {
                 <CardHeader>
                   <CardTitle className="text-white text-lg flex items-center">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
-                    Active Sessions
+                    Departments
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-4xl font-bold">0</p>
-                  <p className="text-purple-100 text-sm mt-2">WhatsApp sessions</p>
+                  <p className="text-4xl font-bold">{stats.departments}</p>
+                  <p className="text-purple-100 text-sm mt-2">Total departments</p>
                 </CardContent>
               </Card>
 
@@ -350,8 +450,8 @@ export default function SuperAdminDashboard() {
                     {companies.map((company) => (
                       <div key={company._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-semibold text-lg">{company.name}</h4>
+                          <div className="flex-1 cursor-pointer" onClick={() => router.push(`/superadmin/company/${company._id}`)}>
+                            <h4 className="font-semibold text-lg text-blue-600 hover:text-blue-800 hover:underline">{company.name}</h4>
                             <p className="text-sm text-gray-500">ID: {company.companyId}</p>
                             <p className="text-sm text-gray-500">{company.contactEmail} • {company.contactPhone}</p>
                           </div>
@@ -364,6 +464,22 @@ export default function SuperAdminDashboard() {
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {company.companyType}
                             </span>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-blue-600 hover:text-blue-900"
+                              onClick={() => handleEditCompany(company)}
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-900"
+                              onClick={() => handleDeleteCompany(company._id)}
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -410,13 +526,19 @@ export default function SuperAdminDashboard() {
                       {departments.map((department) => (
                         <tr key={department._id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">{department.name}</div>
+                            <div 
+                              className="cursor-pointer"
+                              onClick={() => {
+                                const companyId = typeof department.companyId === 'object' ? department.companyId._id : department.companyId;
+                                router.push(`/superadmin/department/${department._id}?companyId=${companyId}`);
+                              }}
+                            >
+                              <div className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">{department.name}</div>
                               <div className="text-sm text-gray-500">{department.departmentId}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {department.companyId}
+                            {getCompanyDisplay(department.companyId)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {department.contactPerson || 'N/A'}
@@ -427,7 +549,22 @@ export default function SuperAdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-900">Edit</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-blue-600 hover:text-blue-900 mr-2"
+                              onClick={() => {/* TODO: Implement edit department */}}
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-900"
+                              onClick={() => {/* TODO: Implement delete department */}}
+                            >
+                              Delete
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -503,6 +640,254 @@ export default function SuperAdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            {loadingAnalytics ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading analytics...</p>
+              </div>
+            ) : analyticsData ? (
+              <div className="space-y-8">
+                {/* System Overview Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Companies Distribution</CardTitle>
+                      <CardDescription>Active vs Inactive companies</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Active', value: stats.activeCompanies },
+                              { name: 'Inactive', value: stats.companies - stats.activeCompanies }
+                            ].filter(item => item.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {[
+                              { name: 'Active', value: stats.activeCompanies },
+                              { name: 'Inactive', value: stats.companies - stats.activeCompanies }
+                            ].filter(item => item.value > 0).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Users Distribution</CardTitle>
+                      <CardDescription>Active vs Inactive users</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Active', value: stats.activeUsers },
+                              { name: 'Inactive', value: stats.users - stats.activeUsers }
+                            ].filter(item => item.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {[
+                              { name: 'Active', value: stats.activeUsers },
+                              { name: 'Inactive', value: stats.users - stats.activeUsers }
+                            ].filter(item => item.value > 0).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Grievance & Appointment Analytics */}
+                {analyticsData.grievances && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Grievance Status Distribution</CardTitle>
+                        <CardDescription>System-wide grievance status</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={[
+                            { name: 'Total', value: analyticsData.grievances.total },
+                            { name: 'Pending', value: analyticsData.grievances.pending },
+                            { name: 'In Progress', value: analyticsData.grievances.inProgress },
+                            { name: 'Resolved', value: analyticsData.grievances.resolved }
+                          ]}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#8884d8" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Appointment Status Distribution</CardTitle>
+                        <CardDescription>System-wide appointment status</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={[
+                            { name: 'Total', value: analyticsData.appointments.total },
+                            { name: 'Pending', value: analyticsData.appointments.pending },
+                            { name: 'Confirmed', value: analyticsData.appointments.confirmed },
+                            { name: 'Completed', value: analyticsData.appointments.completed }
+                          ]}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#00C49F" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Time Series Charts */}
+                {analyticsData.grievances?.daily && analyticsData.grievances.daily.length > 0 && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Grievance Trends (Last 7 Days)</CardTitle>
+                        <CardDescription>Daily grievance creation</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <AreaChart data={analyticsData.grievances.daily}>
+                            <defs>
+                              <linearGradient id="colorGrievances" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip />
+                            <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrievances)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Appointment Trends (Last 7 Days)</CardTitle>
+                        <CardDescription>Daily appointment creation</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <AreaChart data={analyticsData.appointments?.daily || []}>
+                            <defs>
+                              <linearGradient id="colorAppointments" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#00C49F" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#00C49F" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip />
+                            <Area type="monotone" dataKey="count" stroke="#00C49F" fillOpacity={1} fill="url(#colorAppointments)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Performance Metrics */}
+                {analyticsData.grievances && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium text-green-800">Resolution Rate</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-green-700">
+                          {analyticsData.grievances.resolutionRate || 0}%
+                        </div>
+                        <p className="text-xs text-green-600 mt-1">
+                          {analyticsData.grievances.resolved} of {analyticsData.grievances.total} resolved
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium text-blue-800">Completion Rate</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-blue-700">
+                          {analyticsData.appointments?.completionRate || 0}%
+                        </div>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {analyticsData.appointments?.completed || 0} of {analyticsData.appointments?.total || 0} completed
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium text-purple-800">Last 7 Days</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-purple-700">
+                          {analyticsData.grievances.last7Days || 0}
+                        </div>
+                        <p className="text-xs text-purple-600 mt-1">New grievances</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                      <CardHeader>
+                        <CardTitle className="text-sm font-medium text-orange-800">Last 7 Days</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-orange-700">
+                          {analyticsData.appointments?.last7Days || 0}
+                        </div>
+                        <p className="text-xs text-orange-600 mt-1">New appointments</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No analytics data available</p>
+              </div>
+            )}
           </TabsContent>
 
           {/* Audit Logs Tab */}
@@ -614,8 +999,15 @@ export default function SuperAdminDashboard() {
         </Tabs>
         <CreateCompanyDialog 
           isOpen={showCreateDialog}
-          onClose={() => setShowCreateDialog(false)}
-          onCompanyCreated={fetchCompanies}
+          onClose={() => {
+            setShowCreateDialog(false);
+            setEditingCompany(null);
+          }}
+          onCompanyCreated={() => {
+            fetchCompanies();
+            setEditingCompany(null);
+          }}
+          editingCompany={editingCompany}
         />
         <CreateDepartmentDialog 
           isOpen={showDepartmentDialog}

@@ -3,13 +3,15 @@ import mongoose from 'mongoose';
 import AuditLog from '../models/AuditLog';
 import { authenticate } from '../middleware/auth';
 import { requirePermission } from '../middleware/rbac';
+import { requireDatabaseConnection } from '../middleware/dbConnection';
 import { Permission, UserRole } from '../config/constants';
 
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication and database connection
 router.use(authenticate);
+router.use(requireDatabaseConnection);
 
 // @route   GET /api/audit
 // @desc    Get audit logs (scoped by role)

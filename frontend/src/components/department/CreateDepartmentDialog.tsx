@@ -71,7 +71,9 @@ const CreateDepartmentDialog: React.FC<CreateDepartmentDialogProps> = ({ isOpen,
         toast.error('Failed to create department');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create department');
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create department';
+      console.error('Department creation error:', error.response?.data);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
