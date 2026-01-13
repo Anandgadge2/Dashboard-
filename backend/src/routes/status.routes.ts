@@ -9,6 +9,7 @@ import Company from '../models/Company';
 import { logUserAction } from '../utils/auditLogger';
 import { AuditAction } from '../config/constants';
 import { sendWhatsAppMessage } from '../services/whatsappService';
+import { getTranslation } from '../services/chatbotEngine';
 
 const router = express.Router();
 
@@ -116,19 +117,38 @@ router.put('/grievance/:id', requirePermission(Permission.UPDATE_GRIEVANCE), asy
       grievance.closedAt = new Date();
     }
 
+    // Add to timeline
+    if (!grievance.timeline) {
+      grievance.timeline = [];
+    }
+    grievance.timeline.push({
+      action: 'STATUS_UPDATED',
+      details: {
+        fromStatus: oldStatus,
+        toStatus: status,
+        remarks
+      },
+      performedBy: currentUser._id,
+      timestamp: new Date()
+    });
+
     await grievance.save();
 
-    // Send WhatsApp notification to citizen
-    try {
-      const company = await Company.findById(grievance.companyId);
-      if (company && company.whatsappConfig?.phoneNumberId && grievance.citizenWhatsApp) {
-        const message = getStatusMessage('grievance', grievance.grievanceId, status, remarks);
-        await sendWhatsAppMessage(company, grievance.citizenWhatsApp, message);
-        console.log('✅ WhatsApp notification sent to citizen:', grievance.citizenWhatsApp);
+    // Send WhatsApp notification ONLY if status is RESOLVED
+    if (status === GrievanceStatus.RESOLVED) {
+      try {
+        const company = await Company.findById(grievance.companyId);
+        if (company && grievance.citizenWhatsApp) {
+          const notificationMessage = getTranslation('grievanceResolvedNotify', grievance.language)
+            .replace('{id}', grievance.grievanceId)
+            .replace('{remarks}', remarks || getTranslation('label_no_remarks', grievance.language));
+
+          await sendWhatsAppMessage(company, grievance.citizenWhatsApp, notificationMessage);
+          console.log('✅ Localized Resolution notification sent to citizen:', grievance.citizenWhatsApp);
+        }
+      } catch (notifError: any) {
+        console.error('⚠️  Failed to send WhatsApp notification:', notifError.message);
       }
-    } catch (notifError: any) {
-      console.error('⚠️  Failed to send WhatsApp notification:', notifError.message);
-      // Don't fail the request if notification fails
     }
 
     await logUserAction(
@@ -230,6 +250,21 @@ router.put('/appointment/:id', requirePermission(Permission.UPDATE_APPOINTMENT),
     } else if (status === AppointmentStatus.CANCELLED && !appointment.cancelledAt) {
       appointment.cancelledAt = new Date();
     }
+
+    // Add to timeline
+    if (!appointment.timeline) {
+      appointment.timeline = [];
+    }
+    appointment.timeline.push({
+      action: 'STATUS_UPDATED',
+      details: {
+        fromStatus: oldStatus,
+        toStatus: status,
+        remarks
+      },
+      performedBy: currentUser._id,
+      timestamp: new Date()
+    });
 
     await appointment.save();
 

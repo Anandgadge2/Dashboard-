@@ -88,14 +88,56 @@ router.put('/grievance/:id/assign', requirePermission(Permission.UPDATE_GRIEVANC
       });
     }
 
+    // Track old values for timeline
+    const oldAssignedTo = grievance.assignedTo;
+    const oldDepartmentId = grievance.departmentId?._id;
+
     // Update grievance
     grievance.assignedTo = assignedUser._id;
     grievance.assignedAt = new Date();
     
-    // Update department if provided (department transfer)
-    if (departmentId) {
-      grievance.departmentId = departmentId;
+    // Auto-update department based on assigned user's department
+    // If the assigned user belongs to a different department than the current one
+    if (assignedUser.departmentId && (!oldDepartmentId || oldDepartmentId.toString() !== assignedUser.departmentId.toString())) {
+      grievance.departmentId = assignedUser.departmentId as any;
+      
+      // Add department transfer event
+      grievance.timeline.push({
+        action: 'DEPARTMENT_TRANSFER',
+        details: {
+          fromDepartmentId: oldDepartmentId,
+          toDepartmentId: assignedUser.departmentId,
+          reason: 'Auto-updated during reassignment'
+        },
+        performedBy: currentUser._id,
+        timestamp: new Date()
+      });
+    } else if (departmentId && (!oldDepartmentId || oldDepartmentId.toString() !== departmentId)) {
+        // Manual department update if provided
+        grievance.departmentId = departmentId;
+        grievance.timeline.push({
+          action: 'DEPARTMENT_TRANSFER',
+          details: {
+            fromDepartmentId: oldDepartmentId,
+            toDepartmentId: departmentId,
+            reason: 'Manual transfer'
+          },
+          performedBy: currentUser._id,
+          timestamp: new Date()
+        });
     }
+    
+    // Add assignment event
+    grievance.timeline.push({
+      action: 'ASSIGNED',
+      details: {
+        fromUserId: oldAssignedTo,
+        toUserId: assignedUser._id,
+        toUserName: assignedUser.getFullName()
+      },
+      performedBy: currentUser._id,
+      timestamp: new Date()
+    });
     
     await grievance.save();
 
@@ -188,12 +230,53 @@ router.put('/appointment/:id/assign', requirePermission(Permission.UPDATE_APPOIN
       }
     }
 
+    // Track old values
+    const oldAssignedTo = appointment.assignedTo;
+    const oldDepartmentId = appointment.departmentId?._id;
+
     appointment.assignedTo = assignedUser._id;
     
-    // Update department if provided (department transfer)
-    if (departmentId) {
-      appointment.departmentId = departmentId;
+    // Auto-update department based on assigned user's department
+    if (assignedUser.departmentId && (!oldDepartmentId || oldDepartmentId.toString() !== assignedUser.departmentId.toString())) {
+      appointment.departmentId = assignedUser.departmentId as any;
+      
+      // Add department transfer event
+      appointment.timeline.push({
+        action: 'DEPARTMENT_TRANSFER',
+        details: {
+          fromDepartmentId: oldDepartmentId,
+          toDepartmentId: assignedUser.departmentId,
+          reason: 'Auto-updated during reassignment'
+        },
+        performedBy: currentUser._id,
+        timestamp: new Date()
+      });
+    } else if (departmentId && (!oldDepartmentId || oldDepartmentId.toString() !== departmentId)) {
+        // Manual department update if provided
+        appointment.departmentId = departmentId;
+        appointment.timeline.push({
+          action: 'DEPARTMENT_TRANSFER',
+          details: {
+            fromDepartmentId: oldDepartmentId,
+            toDepartmentId: departmentId,
+            reason: 'Manual transfer'
+          },
+          performedBy: currentUser._id,
+          timestamp: new Date()
+        });
     }
+    
+    // Add assignment event
+    appointment.timeline.push({
+      action: 'ASSIGNED',
+      details: {
+        fromUserId: oldAssignedTo,
+        toUserId: assignedUser._id,
+        toUserName: assignedUser.getFullName()
+      },
+      performedBy: currentUser._id,
+      timestamp: new Date()
+    });
     
     await appointment.save();
 

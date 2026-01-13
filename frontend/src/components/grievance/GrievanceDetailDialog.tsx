@@ -4,6 +4,18 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Grievance } from '@/lib/api/grievance';
+import { format } from 'date-fns';
+import { 
+  Calendar, 
+  User, 
+  RefreshCw, 
+  ArrowRightLeft, 
+  CheckCircle2, 
+  Clock,
+  MessageSquare,
+  Building
+} from 'lucide-react';
+
 
 interface GrievanceDetailDialogProps {
   isOpen: boolean;
@@ -162,7 +174,7 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
                         alt={`Upload ${index + 1}`}
                         className="w-full h-48 object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                          (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
                         }}
                       />
                     ) : (
@@ -178,51 +190,113 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
             </div>
           )}
 
-          {/* Timeline */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Timeline</h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          {/* Aesthetic Timeline */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
+              <Clock className="w-5 h-5 mr-2 text-blue-600" />
+              Service Timeline
+            </h3>
+            
+            <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+              {/* Creation Entry */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-green-100 border-2 border-white flex items-center justify-center z-10">
+                  <Calendar className="w-3 h-3 text-green-600" />
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Created</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(grievance.createdAt).toLocaleString()}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Grievance Registered</p>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {format(new Date(grievance.createdAt), 'MMM dd, yyyy • hh:mm a')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Grievance successfully submitted via WhatsApp Chatbot.</p>
                 </div>
               </div>
-              {grievance.assignedAt && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Assigned</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(grievance.assignedAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {grievance.resolvedAt && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Resolved</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(grievance.resolvedAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {grievance.closedAt && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Closed</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(grievance.closedAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
+
+              {/* Dynamic Timeline Entries */}
+              {grievance.timeline && grievance.timeline.length > 0 ? (
+                grievance.timeline.map((event, index) => {
+                  if (event.action === 'CREATED') return null; // Already handled above
+
+                  let icon = <RefreshCw className="w-3 h-3 text-blue-600" />;
+                  let bgColor = 'bg-blue-100';
+                  let title = 'Activity Logged';
+                  let description = '';
+
+                  switch (event.action) {
+                    case 'ASSIGNED':
+                      icon = <User className="w-3 h-3 text-orange-600" />;
+                      bgColor = 'bg-orange-100';
+                      title = 'Officer Assigned';
+                      description = `Assigned to ${event.details?.toUserName || 'an officer'}.`;
+                      break;
+                    case 'STATUS_UPDATED':
+                      const isResolved = event.details?.toStatus === 'RESOLVED' || event.details?.toStatus === 'CLOSED';
+                      icon = isResolved ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : <RefreshCw className="w-3 h-3 text-blue-600" />;
+                      bgColor = isResolved ? 'bg-green-100' : 'bg-blue-100';
+                      title = `Status updated to ${event.details?.toStatus?.replace('_', ' ')}`;
+                      description = event.details?.remarks ? `"${event.details.remarks}"` : 'Status changed by administration.';
+                      break;
+                    case 'DEPARTMENT_TRANSFER':
+                      icon = <Building className="w-3 h-3 text-purple-600" />;
+                      bgColor = 'bg-purple-100';
+                      title = 'Department Transferred';
+                      description = 'Grievance transferred to another department for resolution.';
+                      break;
+                  }
+
+                  const performer = typeof event.performedBy === 'object' 
+                    ? `${event.performedBy.firstName} ${event.performedBy.lastName}` 
+                    : 'System';
+                  const role = typeof event.performedBy === 'object' ? event.performedBy.role : '';
+
+                  return (
+                    <div key={index} className="relative">
+                      <div className={`absolute -left-[31px] top-1 w-6 h-6 rounded-full ${bgColor} border-2 border-white flex items-center justify-center z-10`}>
+                        {icon}
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{title}</p>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {format(new Date(event.timestamp), 'MMM dd, yyyy • hh:mm a')}
+                          </span>
+                        </div>
+                        <div className="mt-1">
+                          <p className="text-sm text-gray-700">{description}</p>
+                          <div className="flex items-center mt-2 space-x-2">
+                             <div className="px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-500 uppercase">
+                               {role || 'AGENT'}
+                             </div>
+                             <span className="text-xs text-gray-400">By {performer}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                // Fallback to StatusHistory if timeline doesn't exist (compatibility)
+                grievance.statusHistory?.map((history, index) => {
+                  if (index === 0 && history.status === 'PENDING') return null; // Avoid duplicate start
+                  return (
+                    <div key={`hist-${index}`} className="relative">
+                      <div className="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center z-10">
+                        <RefreshCw className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Status: {history.status}</p>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {format(new Date(history.changedAt), 'MMM dd, yyyy • hh:mm a')}
+                          </span>
+                        </div>
+                        {history.remarks && <p className="text-sm text-gray-600 mt-1 italic">"{history.remarks}"</p>}
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

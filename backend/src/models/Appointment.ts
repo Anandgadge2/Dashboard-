@@ -29,6 +29,12 @@ export interface IAppointment extends Document {
   isDeleted: boolean;
   deletedAt?: Date;
   deletedBy?: mongoose.Types.ObjectId;
+  timeline: Array<{
+    action: string;
+    details?: any;
+    performedBy?: mongoose.Types.ObjectId;
+    timestamp: Date;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -141,7 +147,22 @@ const AppointmentSchema: Schema = new Schema(
     deletedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User'
-    }
+    },
+    timeline: [{
+      action: {
+        type: String,
+        required: true
+      },
+      details: Schema.Types.Mixed,
+      performedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true
@@ -163,6 +184,17 @@ AppointmentSchema.pre('save', async function (next) {
     this.statusHistory = [{
       status: this.status,
       changedAt: new Date()
+    }];
+
+    // Initialize timeline
+    this.timeline = [{
+      action: 'CREATED',
+      details: {
+        purpose: this.purpose,
+        date: this.appointmentDate,
+        time: this.appointmentTime
+      },
+      timestamp: new Date()
     }];
   }
   next();

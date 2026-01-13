@@ -9,6 +9,7 @@ import 'express-async-errors';
 import { connectDatabase, closeDatabase } from './config/database';
 import { connectRedis, disconnectRedis } from './config/redis';
 import { logger } from './config/logger'; 
+import { configureCloudinary } from './config/cloudinary';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -35,7 +36,7 @@ import { notFoundHandler } from './middleware/notFoundHandler';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // ================================
 // Middleware
@@ -103,24 +104,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.get('/', (_req: Request, res: Response) => {
   res.json({
     success: true,
-    message: 'Dashboard API Server is running',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      api: '/api',
-      auth: '/api/auth',
-      companies: '/api/companies',
-      departments: '/api/departments',
-      users: '/api/users',
-      grievances: '/api/grievances',
-      appointments: '/api/appointments',
-      analytics: '/api/analytics',
-      webhook: '/webhook or /api/webhook/whatsapp (GET for verification, POST for messages)',
-      import: '/api/import',
-      export: '/api/export',
-      audit: '/api/audit'
-    }
-  });
+    message: 'Dashboard API Server is running'  });
 });
 
 // Webhook routes (must be before /api routes to avoid middleware blocking)
@@ -162,65 +146,34 @@ const startServer = async () => {
   let mongoConnected = false;
   let redisConnected = false;
 
-  // Try to connect to MongoDB (CRITICAL - server should not start without DB)
+  // Configure Cloudinary
+  try {
+    configureCloudinary();
+  } catch (error: any) {
+    logger.error('Cloudinary configuration failed:', error.message);
+  }
+
+  // Connect to MongoDB
   try {
     await connectDatabase();
     mongoConnected = true;
-    logger.info('✅ MongoDB connected successfully');
   } catch (error: any) {
-    logger.error('❌ MongoDB connection failed:', error.message);
-    logger.error('');
-    logger.error('🚨 CRITICAL: Server cannot function without database connection!');
-    logger.error('');
-    logger.error('💡 To fix this:');
-    logger.error('   1. Check your internet connection');
-    logger.error('   2. Verify MONGODB_URI in .env file');
-    logger.error('   3. Check MongoDB Atlas network access (if using Atlas)');
-    logger.error('   4. Verify database credentials');
-    logger.error('');
-    logger.error('⚠️  Server will start but database operations will fail!');
-    logger.error('⚠️  Please fix the database connection and restart the server.');
-    logger.error('');
+    logger.error('MongoDB connection failed:', error.message);
   }
 
-  // Try to connect to Redis (optional, non-blocking)
+  // Connect to Redis (optional)
   try {
     const redis = await connectRedis();
-    if (redis) {
-      redisConnected = true;
-      logger.info('✅ Redis connected successfully');
-    } else {
-      logger.warn('⚠️  Running without Redis (caching disabled)');
-    }
+    if (redis) redisConnected = true;
   } catch (error: any) {
-    logger.warn('⚠️  Redis connection failed:', error.message);
-    logger.warn('⚠️  Running without Redis (caching disabled)');
+    // Redis is optional, continue without it
   }
 
-  // Start server regardless of database connections
+  // Start server
   try {
     app.listen(PORT, () => {
-      logger.info('');
-      logger.info('='.repeat(60));
-      logger.info('🚀 SERVER STARTED SUCCESSFULLY');
-      logger.info('='.repeat(60));
-      logger.info(`📍 Port: ${PORT}`);
-      logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`🌐 API URL: http://localhost:${PORT}`);
-      logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
-      logger.info('');
-      logger.info('📊 Connection Status:');
-      logger.info(`   MongoDB: ${mongoConnected ? '✅ Connected' : '❌ Disconnected'}`);
-      logger.info(`   Redis:   ${redisConnected ? '✅ Connected' : '❌ Disconnected'}`);
-      logger.info('='.repeat(60));
-      
-      if (!mongoConnected) {
-        logger.warn('');
-        logger.warn('⚠️  WARNING: Server is running without MongoDB!');
-        logger.warn('⚠️  Most API endpoints will not work until MongoDB connects.');
-        logger.warn('⚠️  Please fix the connection issue. See NETWORK_TROUBLESHOOTING.md');
-        logger.warn('');
-      }
+      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`MongoDB: ${mongoConnected ? '✅' : '❌'} | Redis: ${redisConnected ? '✅' : '❌'}`);
     });
   } catch (error) {
     logger.error('❌ Failed to start HTTP server:', error);
@@ -230,28 +183,22 @@ const startServer = async () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason: Error) => {
-  logger.error('⚠️  Unhandled Promise Rejection:', reason);
-  logger.error('⚠️  The application will continue running, but this should be investigated');
-  // Don't exit - let the app continue running
+  logger.error('Unhandled Promise Rejection:', reason);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
-  logger.error('⚠️  Uncaught Exception:', error);
-  logger.error('⚠️  The application will continue running, but this should be investigated');
-  // Don't exit - let the app continue running
+  logger.error('Uncaught Exception:', error);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  logger.info('SIGTERM signal received: closing HTTP server');
   await closeDatabase();
   await disconnectRedis();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  logger.info('SIGINT signal received: closing HTTP server');
   await closeDatabase();
   await disconnectRedis();
   process.exit(0);

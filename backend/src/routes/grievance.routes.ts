@@ -1,4 +1,5 @@
-  import express, { Request, Response } from 'express';
+import express, { Request, Response } from 'express';
+import User from '../models/User';
 import Grievance from '../models/Grievance';
 import { authenticate } from '../middleware/auth';
 import { requirePermission } from '../middleware/rbac';
@@ -138,7 +139,8 @@ router.get('/:id', requirePermission(Permission.READ_GRIEVANCE), async (req: Req
       .populate('companyId', 'name companyId')
       .populate('departmentId', 'name departmentId')
       .populate('assignedTo', 'firstName lastName email')
-      .populate('statusHistory.changedBy', 'firstName lastName');
+      .populate('statusHistory.changedBy', 'firstName lastName')
+      .populate('timeline.performedBy', 'firstName lastName role');
 
     if (!grievance) {
       res.status(404).json({
@@ -212,6 +214,8 @@ router.put('/:id/status', requirePermission(Permission.UPDATE_GRIEVANCE), async 
       return;
     }
 
+    const oldStatus = grievance.status;
+    
     // Update status
     grievance.status = status;
     grievance.statusHistory.push({
@@ -227,6 +231,19 @@ router.put('/:id/status', requirePermission(Permission.UPDATE_GRIEVANCE), async 
     } else if (status === GrievanceStatus.CLOSED) {
       grievance.closedAt = new Date();
     }
+
+    // Add to timeline
+    if (!grievance.timeline) grievance.timeline = [];
+    grievance.timeline.push({
+      action: 'STATUS_UPDATED',
+      details: {
+        fromStatus: oldStatus,
+        toStatus: status,
+        remarks
+      },
+      performedBy: currentUser._id,
+      timestamp: new Date()
+    });
 
     await grievance.save();
 
@@ -267,22 +284,9 @@ router.put('/:id/assign', requirePermission(Permission.ASSIGN_GRIEVANCE), async 
       return;
     }
 
-    const updateData: any = {
-      assignedTo,
-      assignedAt: new Date(),
-      status: GrievanceStatus.ASSIGNED
-    };
-
-    // Update department if provided (department transfer)
-    if (departmentId) {
-      updateData.departmentId = departmentId;
-    }
-
-    const grievance = await Grievance.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const grievance = await Grievance.findById(req.params.id)
+      .populate('companyId')
+      .populate('departmentId');
 
     if (!grievance) {
       res.status(404).json({
@@ -292,8 +296,42 @@ router.put('/:id/assign', requirePermission(Permission.ASSIGN_GRIEVANCE), async 
       return;
     }
 
+    const assignedUser = await User.findById(assignedTo);
+    if (!assignedUser) {
+      res.status(404).json({
+        success: false,
+        message: 'Assigned user not found'
+      });
+      return;
+    }
+
+    const oldAssignedTo = grievance.assignedTo;
+    const oldDepartmentId = grievance.departmentId?._id;
+
+    // Update assignment details
+    grievance.assignedTo = assignedUser._id;
+    grievance.assignedAt = new Date();
+    grievance.status = GrievanceStatus.ASSIGNED;
+
+    // Auto-update department based on assigned user's department
+    if (assignedUser.departmentId && (!oldDepartmentId || oldDepartmentId.toString() !== assignedUser.departmentId.toString())) {
+      grievance.departmentId = assignedUser.departmentId as any;
+      
+      // Add department transfer event to timeline
+      grievance.timeline.push({
+        action: 'DEPARTMENT_TRANSFER',
+        details: {
+          fromDepartmentId: oldDepartmentId,
+          toDepartmentId: assignedUser.departmentId,
+          reason: 'Auto-updated during reassignment'
+        },
+        performedBy: req.user!._id,
+        timestamp: new Date()
+      });
+    }
+
     // Add to status history
-    const remarks = departmentId 
+    const statusRemarks = departmentId 
       ? `Assigned to user and transferred to new department`
       : `Assigned to user`;
     
@@ -301,7 +339,19 @@ router.put('/:id/assign', requirePermission(Permission.ASSIGN_GRIEVANCE), async 
       status: GrievanceStatus.ASSIGNED,
       changedBy: req.user!._id,
       changedAt: new Date(),
-      remarks
+      remarks: statusRemarks
+    });
+
+    // Add assignment event to timeline
+    grievance.timeline.push({
+      action: 'ASSIGNED',
+      details: {
+        fromUserId: oldAssignedTo,
+        toUserId: assignedUser._id,
+        toUserName: assignedUser.getFullName()
+      },
+      performedBy: req.user!._id,
+      timestamp: new Date()
     });
 
     await grievance.save();

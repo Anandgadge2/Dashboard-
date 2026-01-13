@@ -144,92 +144,109 @@ export default function AppointmentsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+              <thead className="bg-gradient-to-r from-purple-600 to-purple-700 text-white whitespace-nowrap">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Citizen Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Purpose</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Date & Time</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Assigned To</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Created</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Appointment ID</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Citizen Information</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Department & Purpose</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Scheduled For</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Assignment</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">Booking Date</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredAppointments.map((appointment) => (
-                  <tr key={appointment._id} className="hover:bg-purple-50 transition-colors">
+                  <tr key={appointment._id} className="hover:bg-purple-50/50 transition-colors">
                     <td className="px-6 py-4">
-                      <span className="font-mono text-sm text-gray-900">{appointment.appointmentId}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleViewDetails(appointment)}
-                        className="text-purple-600 hover:text-purple-800 font-semibold hover:underline flex items-center"
-                      >
-                        {appointment.citizenName}
-                      </button>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <Phone className="w-3 h-3 mr-1" />
-                        {appointment.citizenPhone}
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm text-purple-700">{appointment.appointmentId}</span>
+                        <span className="text-[10px] text-gray-400 mt-1 uppercase">Ref ID: {appointment._id.substring(0, 8)}...</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-900 line-clamp-2 max-w-xs">
-                        {appointment.purpose}
-                      </p>
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => handleViewDetails(appointment)}
+                          className="text-purple-600 hover:text-purple-800 font-bold text-left hover:underline"
+                        >
+                          {appointment.citizenName}
+                        </button>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <Phone className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                          {appointment.citizenPhone}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-semibold text-gray-900 line-clamp-1">
+                          {typeof appointment.departmentId === 'object' ? (appointment.departmentId as any).name : 'General Department'}
+                        </span>
+                        <p className="text-[11px] text-gray-600 line-clamp-1 italic">
+                          {appointment.purpose}
+                        </p>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="flex items-center text-sm font-medium text-gray-900">
-                          <Calendar className="w-4 h-4 mr-1 text-purple-600" />
+                        <div className="flex items-center text-sm font-bold text-gray-900">
+                          <Calendar className="w-3.5 h-3.5 mr-1.5 text-purple-600" />
                           {new Date(appointment.appointmentDate).toLocaleDateString()}
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Clock className="w-4 h-4 mr-1" />
+                        <div className="flex items-center text-[11px] font-medium text-gray-600">
+                          <Clock className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
                           {appointment.appointmentTime}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-sm text-gray-600">
                       {appointment.assignedTo ? (
-                        <div className="flex items-center">
-                          <UserPlus className="w-4 h-4 mr-1 text-green-600" />
-                          <span className="text-sm font-medium text-gray-900">
-                            {typeof appointment.assignedTo === 'object' 
-                              ? `${appointment.assignedTo.firstName} ${appointment.assignedTo.lastName}`
-                              : appointment.assignedTo}
-                          </span>
+                        <div className="flex flex-col">
+                          <div className="flex items-center">
+                            <UserPlus className="w-3.5 h-3.5 mr-1.5 text-green-600" />
+                            <span className="text-sm font-semibold text-gray-900">
+                              {typeof appointment.assignedTo === 'object' 
+                                ? `${appointment.assignedTo.firstName} ${appointment.assignedTo.lastName}`
+                                : appointment.assignedTo}
+                            </span>
+                          </div>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-500 italic">Unassigned</span>
+                        <span className="inline-flex items-center text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100 whitespace-nowrap">
+                          Pending Assignment
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(appointment.status)}`}>
-                        {appointment.status}
+                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wider ${getStatusColor(appointment.status)}`}>
+                        {appointment.status.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(appointment.createdAt).toLocaleDateString()}
+                      <div className="flex flex-col text-[11px]">
+                        <span className="font-semibold">{new Date(appointment.createdAt).toLocaleDateString()}</span>
+                        <span className="text-gray-400">{new Date(appointment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4">
                       <div className="flex items-center justify-center space-x-2">
                         {user?.role === 'COMPANY_ADMIN' && (
                           <button
                             onClick={() => handleAssignClick(appointment)}
-                            className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                            title="Assign Officer"
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-200"
                           >
-                            <UserPlus className="w-4 h-4 mr-1" />
-                            Assign
+                            <UserPlus className="w-5 h-5" />
                           </button>
                         )}
                         <button
                           onClick={() => handleViewDetails(appointment)}
-                          className="inline-flex items-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                          title="View Full Details"
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-200"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
+                          <Eye className="w-5 h-5" />
                         </button>
                       </div>
                     </td>

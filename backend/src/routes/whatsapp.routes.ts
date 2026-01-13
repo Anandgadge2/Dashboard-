@@ -133,6 +133,7 @@ async function handleIncomingMessage(message: any, metadata: any) {
   );
 
   const response = await processWhatsAppMessage({
+    companyId: company.companyId,
     from,
     messageText,
     messageType,
@@ -174,6 +175,7 @@ async function handleInteractiveMessage(message: any, metadata: any) {
   console.log(`🔘 Button "${buttonId}" clicked by ${from}`);
 
   const response = await processWhatsAppMessage({
+    companyId: company.companyId,
     from,
     messageText,
     messageType: 'interactive',

@@ -1,9 +1,20 @@
 'use client';
 
+import { format } from 'date-fns';
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Appointment } from '@/lib/api/appointment';
+import { 
+  Calendar, 
+  User, 
+  RefreshCw, 
+  ArrowRightLeft, 
+  CheckCircle2, 
+  Clock,
+  Building,
+  AlertCircle
+} from 'lucide-react';
 
 interface AppointmentDetailDialogProps {
   isOpen: boolean;
@@ -150,29 +161,114 @@ const AppointmentDetailDialog: React.FC<AppointmentDetailDialogProps> = ({ isOpe
             </div>
           )}
 
-          {/* Timeline */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Timeline</h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          {/* Aesthetic Timeline */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-6 flex items-center text-gray-800">
+              <Clock className="w-5 h-5 mr-2 text-blue-600" />
+              Service Timeline
+            </h3>
+            
+            <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+              {/* Creation Entry */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-green-100 border-2 border-white flex items-center justify-center z-10">
+                  <Calendar className="w-3 h-3 text-green-600" />
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Created</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(appointment.createdAt).toLocaleString()}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Appointment Booked</p>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {format(new Date(appointment.createdAt), 'MMM dd, yyyy • hh:mm a')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Appointment successfully scheduled via WhatsApp Chatbot.</p>
                 </div>
               </div>
-              {(appointment as any).completedAt && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Completed</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date((appointment as any).completedAt).toLocaleString()}
-                    </p>
+
+              {/* Dynamic Timeline Entries */}
+              {appointment.timeline && appointment.timeline.length > 0 ? (
+                appointment.timeline.map((event, index) => {
+                  if (event.action === 'CREATED') return null;
+
+                  let icon = <RefreshCw className="w-3 h-3 text-blue-600" />;
+                  let bgColor = 'bg-blue-100';
+                  let title = 'Activity Logged';
+                  let description = '';
+
+                  switch (event.action) {
+                    case 'ASSIGNED':
+                      icon = <User className="w-3 h-3 text-orange-600" />;
+                      bgColor = 'bg-orange-100';
+                      title = 'Officer Assigned';
+                      description = `Assigned to ${event.details?.toUserName || 'an officer'}.`;
+                      break;
+                    case 'STATUS_UPDATED':
+                      const isSuccess = event.details?.toStatus === 'COMPLETED' || event.details?.toStatus === 'CONFIRMED';
+                      const isFailure = event.details?.toStatus === 'CANCELLED' || event.details?.toStatus === 'NO_SHOW';
+                      
+                      icon = isSuccess ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : 
+                             isFailure ? <AlertCircle className="w-3 h-3 text-red-600" /> : 
+                             <RefreshCw className="w-3 h-3 text-blue-600" />;
+                             
+                      bgColor = isSuccess ? 'bg-green-100' : isFailure ? 'bg-red-100' : 'bg-blue-100';
+                      title = `Status: ${event.details?.toStatus?.replace('_', ' ')}`;
+                      description = event.details?.remarks ? `"${event.details.remarks}"` : 'Status updated by administration.';
+                      break;
+                    case 'DEPARTMENT_TRANSFER':
+                      icon = <Building className="w-3 h-3 text-purple-600" />;
+                      bgColor = 'bg-purple-100';
+                      title = 'Department Sync';
+                      description = 'Appointment department synchronized with assigned officer.';
+                      break;
+                  }
+
+                  const performer = typeof event.performedBy === 'object' 
+                    ? `${event.performedBy.firstName} ${event.performedBy.lastName}` 
+                    : 'System';
+                  const role = typeof event.performedBy === 'object' ? event.performedBy.role : '';
+
+                  return (
+                    <div key={index} className="relative">
+                      <div className={`absolute -left-[31px] top-1 w-6 h-6 rounded-full ${bgColor} border-2 border-white flex items-center justify-center z-10`}>
+                        {icon}
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">{title}</p>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {format(new Date(event.timestamp), 'MMM dd, yyyy • hh:mm a')}
+                          </span>
+                        </div>
+                        <div className="mt-1">
+                          <p className="text-sm text-gray-700">{description}</p>
+                          <div className="flex items-center mt-2 space-x-2">
+                             <div className="px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-500 uppercase">
+                               {role || 'AGENT'}
+                             </div>
+                             <span className="text-xs text-gray-400">By {performer}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                // Fallback (for older records)
+                (appointment as any).completedAt && (
+                   <div className="relative">
+                    <div className="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-green-100 border-2 border-white flex items-center justify-center z-10">
+                      <CheckCircle2 className="w-3 h-3 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">Completed</p>
+                        <span className="text-xs text-gray-500 font-medium">
+                          {format(new Date((appointment as any).completedAt), 'MMM dd, yyyy • hh:mm a')}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
           </div>

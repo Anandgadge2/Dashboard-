@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import User from '../models/User';
 import Appointment from '../models/Appointment';
 import { authenticate } from '../middleware/auth';
 import { requirePermission } from '../middleware/rbac';
@@ -145,7 +146,8 @@ router.get('/:id', requirePermission(Permission.READ_APPOINTMENT), async (req: R
       .populate('companyId', 'name companyId')
       .populate('departmentId', 'name departmentId')
       .populate('assignedTo', 'firstName lastName email')
-      .populate('statusHistory.changedBy', 'firstName lastName');
+      .populate('statusHistory.changedBy', 'firstName lastName')
+      .populate('timeline.performedBy', 'firstName lastName role');
 
     if (!appointment) {
       res.status(404).json({
@@ -219,6 +221,8 @@ router.put('/:id/status', requirePermission(Permission.UPDATE_APPOINTMENT), asyn
       return;
     }
 
+    const oldStatus = appointment.status;
+    
     // Update status
     appointment.status = status;
     appointment.statusHistory.push({
@@ -238,7 +242,27 @@ router.put('/:id/status', requirePermission(Permission.UPDATE_APPOINTMENT), asyn
       }
     }
 
+    // Add to timeline
+    if (!appointment.timeline) appointment.timeline = [];
+    appointment.timeline.push({
+      action: 'STATUS_UPDATED',
+      details: {
+        fromStatus: oldStatus,
+        toStatus: status,
+        remarks
+      },
+      performedBy: currentUser._id,
+      timestamp: new Date()
+    });
+
     await appointment.save();
+    
+    // RE-POPULATE AFTER SAVE to get the latest data including timeline
+    const updatedAppointment = await Appointment.findById(appointment._id)
+      .populate('companyId', 'name companyId')
+      .populate('departmentId', 'name departmentId')
+      .populate('assignedTo', 'firstName lastName email')
+      .populate('statusHistory.changedBy', 'firstName lastName');
 
     await logUserAction(
       req,
@@ -251,7 +275,7 @@ router.put('/:id/status', requirePermission(Permission.UPDATE_APPOINTMENT), asyn
     res.json({
       success: true,
       message: 'Appointment status updated successfully',
-      data: { appointment }
+      data: { appointment: updatedAppointment }
     });
   } catch (error: any) {
     res.status(500).json({

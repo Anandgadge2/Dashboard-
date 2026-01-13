@@ -17,45 +17,20 @@ export const connectDatabase = async (): Promise<void> => {
 
     // Check if already connected
     if (mongoose.connection.readyState === 1) {
-      logger.info('✅ MongoDB already connected');
       return;
     }
-
-    // Sanitize URI for logging (hide password)
-    const safeUri = mongoUri.replace(/:([^@]+)@/, ':****@');
-    logger.info(`🔌 Connecting to MongoDB: ${safeUri}`);
 
     const options = {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 30000,
-      family: 4, // Force IPv4
+      family: 4,
     };
 
     await mongoose.connect(mongoUri, options);
 
-    // Verify connection
-    const readyState = mongoose.connection.readyState as number;
-    if (readyState === 1) {
-      logger.info('✅ MongoDB connection established successfully');
-      logger.info(`   Database: ${mongoose.connection.name || 'default'}`);
-      logger.info(`   Host: ${mongoose.connection.host}:${mongoose.connection.port || 'default'}`);
-    } else {
-      throw new Error('Connection established but readyState is not 1');
-    }
 
-    mongoose.connection.on('connected', () => {
-      logger.info('✅ MongoDB connection event: connected');
-    });
-
-    mongoose.connection.on('error', (err) => {
-      logger.error('❌ MongoDB connection error:', err);
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('⚠️  MongoDB disconnected');
-    });
 
   } catch (error: any) {
     logger.error('❌ Failed to connect to MongoDB:', error.message);

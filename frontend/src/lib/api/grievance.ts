@@ -12,12 +12,24 @@ export interface Grievance {
   category?: string;
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status: string;
+  statusHistory?: Array<{
+    status: string;
+    changedBy?: string | { _id: string; firstName: string; lastName: string };
+    changedAt: string;
+    remarks?: string;
+  }>;
   assignedTo?: string | { _id: string; firstName: string; lastName: string };
   assignedAt?: string;
   resolvedAt?: string;
   closedAt?: string;
   createdAt: string;
   updatedAt: string;
+  timeline?: Array<{
+    action: string;
+    details?: any;
+    performedBy?: string | { _id: string; firstName: string; lastName: string; role: string };
+    timestamp: string;
+  }>;
 }
 
 export interface CreateGrievanceData {

@@ -18,8 +18,7 @@
     "seed:zpamaravati:data": "ts-node src/scripts/seedZPAmaravatiData.ts",
     "fix:zpadmin": "ts-node src/scripts/fixZPAdminPassword.ts",
     "seed:departments": "ts-node src/scripts/seedDepartments.ts",
-    "seed:users": "ts-node src/scripts/seedUsers.ts",
-    "migrate": "ts-node src/scripts/migrate.ts"
+    "seed:users": "ts-node src/scripts/seedUsers.ts"
   },
   "keywords": [
     "whatsapp",

@@ -329,54 +329,105 @@ export default function DepartmentDetail() {
                 {grievances.length === 0 ? (
                   <p className="text-center py-8 text-gray-500">No grievances found</p>
                 ) : (
-                  <div className="space-y-4">
-                    {grievances.slice(0, 20).map((g) => (
-                      <div key={g._id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 
-                              className="font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                              onClick={async () => {
-                                const response = await grievanceAPI.getById(g._id);
-                                if (response.success) {
-                                  setSelectedGrievance(response.data.grievance);
-                                  setShowGrievanceDetail(true);
-                                }
-                              }}
-                            >
-                              {g.citizenName}
-                            </h4>
-                            <p className="text-sm text-gray-500">{g.citizenPhone}</p>
-                            <p className="text-sm text-gray-700 mt-1 line-clamp-2">{g.description}</p>
-                          </div>
-                          <div className="flex items-center space-x-3 ml-4">
-                            <select
-                              value={g.status}
-                              onChange={async (e) => {
-                                try {
-                                  const response = await grievanceAPI.updateStatus(g._id, e.target.value);
-                                  if (response.success) {
-                                    toast.success('Status updated successfully');
-                                    fetchData();
-                                  } else {
-                                    toast.error('Failed to update status');
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr className="whitespace-nowrap">
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Application No</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Citizen Details</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Raised On</th>
+                          <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {grievances.map((g) => (
+                          <tr key={g._id} className="hover:bg-blue-50/30 transition-colors">
+                            <td className="px-4 py-4">
+                              <span className="font-bold text-sm text-blue-700">{g.grievanceId}</span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <button
+                                  onClick={async () => {
+                                    const response = await grievanceAPI.getById(g._id);
+                                    if (response.success) {
+                                      setSelectedGrievance(response.data.grievance);
+                                      setShowGrievanceDetail(true);
+                                    }
+                                  }}
+                                  className="text-gray-900 font-bold text-sm text-left hover:text-blue-600 hover:underline"
+                                >
+                                  {g.citizenName}
+                                </button>
+                                <span className="text-xs text-gray-500">{g.citizenPhone}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded border border-blue-100 italic">
+                                {g.category || 'General'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <select
+                                value={g.status}
+                                onChange={async (e) => {
+                                  try {
+                                    const response = await grievanceAPI.updateStatus(g._id, e.target.value);
+                                    if (response.success) {
+                                      toast.success('Status updated successfully');
+                                      fetchData();
+                                    } else {
+                                      toast.error('Failed to update status');
+                                    }
+                                  } catch (error: any) {
+                                    toast.error(error.message || 'Failed to update status');
                                   }
-                                } catch (error: any) {
-                                  toast.error(error.message || 'Failed to update status');
-                                }
-                              }}
-                              className="px-3 py-1 text-xs border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              <option value="PENDING">PENDING</option>
-                              <option value="ASSIGNED">ASSIGNED</option>
-                              <option value="IN_PROGRESS">IN_PROGRESS</option>
-                              <option value="RESOLVED">RESOLVED</option>
-                              <option value="CLOSED">CLOSED</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                                }}
+                                className="px-2 py-1 text-[10px] font-bold border border-gray-200 rounded bg-white hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase tracking-tight"
+                              >
+                                <option value="PENDING">PENDING</option>
+                                <option value="ASSIGNED">ASSIGNED</option>
+                                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                <option value="RESOLVED">RESOLVED</option>
+                                <option value="CLOSED">CLOSED</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-4 text-xs text-gray-600">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-gray-800">{new Date(g.createdAt).toLocaleDateString()}</span>
+                                <span className="text-[10px] text-gray-400 font-mono">
+                                  {new Date(g.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    const response = await grievanceAPI.getById(g._id);
+                                    if (response.success) {
+                                      setSelectedGrievance(response.data.grievance);
+                                      setShowGrievanceDetail(true);
+                                    }
+                                  }}
+                                  title="View Details"
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
@@ -392,56 +443,101 @@ export default function DepartmentDetail() {
                 {appointments.length === 0 ? (
                   <p className="text-center py-8 text-gray-500">No appointments found</p>
                 ) : (
-                  <div className="space-y-4">
-                    {appointments.slice(0, 20).map((a) => (
-                      <div key={a._id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 
-                              className="font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                              onClick={async () => {
-                                const response = await appointmentAPI.getById(a._id);
-                                if (response.success) {
-                                  setSelectedAppointment(response.data.appointment);
-                                  setShowAppointmentDetail(true);
-                                }
-                              }}
-                            >
-                              {a.citizenName}
-                            </h4>
-                            <p className="text-sm text-gray-500">{a.purpose}</p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(a.appointmentDate).toLocaleDateString()} at {a.appointmentTime}
-                            </p>
-                          </div>
-                          <div className="flex items-center space-x-3 ml-4">
-                            <select
-                              value={a.status}
-                              onChange={async (e) => {
-                                try {
-                                  const response = await appointmentAPI.updateStatus(a._id, e.target.value);
-                                  if (response.success) {
-                                    toast.success('Status updated successfully');
-                                    fetchData();
-                                  } else {
-                                    toast.error('Failed to update status');
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr className="whitespace-nowrap">
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Appointment ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Citizen Details</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Purpose</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Scheduled At</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {appointments.map((a) => (
+                          <tr key={a._id} className="hover:bg-purple-50/30 transition-colors">
+                            <td className="px-4 py-4 text-sm">
+                              <span className="font-bold text-purple-700">{a.appointmentId}</span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <button
+                                  onClick={async () => {
+                                    const response = await appointmentAPI.getById(a._id);
+                                    if (response.success) {
+                                      setSelectedAppointment(response.data.appointment);
+                                      setShowAppointmentDetail(true);
+                                    }
+                                  }}
+                                  className="text-gray-900 font-bold text-sm text-left hover:text-purple-600 hover:underline"
+                                >
+                                  {a.citizenName}
+                                </button>
+                                <span className="text-xs text-gray-500">{a.citizenPhone}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="text-xs text-gray-600 line-clamp-1 italic">{a.purpose}</span>
+                            </td>
+                            <td className="px-4 py-4 text-xs">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-800">{new Date(a.appointmentDate).toLocaleDateString()}</span>
+                                <span className="text-[10px] text-amber-600 font-bold uppercase">{a.appointmentTime}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <select
+                                value={a.status}
+                                onChange={async (e) => {
+                                  try {
+                                    const response = await appointmentAPI.updateStatus(a._id, e.target.value);
+                                    if (response.success) {
+                                      toast.success('Status updated successfully');
+                                      fetchData();
+                                    } else {
+                                      toast.error('Failed to update status');
+                                    }
+                                  } catch (error: any) {
+                                    toast.error(error.message || 'Failed to update status');
                                   }
-                                } catch (error: any) {
-                                  toast.error(error.message || 'Failed to update status');
-                                }
-                              }}
-                              className="px-3 py-1 text-xs border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              <option value="PENDING">PENDING</option>
-                              <option value="CONFIRMED">CONFIRMED</option>
-                              <option value="COMPLETED">COMPLETED</option>
-                              <option value="CANCELLED">CANCELLED</option>
-                              <option value="NO_SHOW">NO_SHOW</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                                }}
+                                className="px-2 py-1 text-[10px] font-bold border border-gray-200 rounded bg-white hover:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-500 uppercase tracking-tight"
+                              >
+                                <option value="PENDING">PENDING</option>
+                                <option value="CONFIRMED">CONFIRMED</option>
+                                <option value="COMPLETED">COMPLETED</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                                <option value="NO_SHOW">NO_SHOW</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    const response = await appointmentAPI.getById(a._id);
+                                    if (response.success) {
+                                      setSelectedAppointment(response.data.appointment);
+                                      setShowAppointmentDetail(true);
+                                    }
+                                  }}
+                                  title="View Details"
+                                  className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>

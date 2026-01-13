@@ -19,6 +19,12 @@ export interface Appointment {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  timeline?: Array<{
+    action: string;
+    details?: any;
+    performedBy?: string | { _id: string; firstName: string; lastName: string; role: string };
+    timestamp: string;
+  }>;
 }
 
 export interface CreateAppointmentData {

@@ -22,6 +22,27 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import GrievanceDetailDialog from '@/components/grievance/GrievanceDetailDialog';
 import AppointmentDetailDialog from '@/components/appointment/AppointmentDetailDialog';
 import AssignmentDialog from '@/components/assignment/AssignmentDialog';
+import { 
+  ArrowUpDown,
+  Phone,
+  UserPlus,
+  UserCog,
+  Key,
+  UserMinus,
+  ChevronUp, 
+  ChevronDown, 
+  User as UserIcon, 
+  Mail, 
+  Shield, 
+  Building, 
+  CheckCircle2, 
+  XCircle,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Lock,
+  Unlock
+} from 'lucide-react';
 
 const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -104,6 +125,17 @@ export default function Dashboard() {
   const [selectedGrievanceForAssignment, setSelectedGrievanceForAssignment] = useState<Grievance | null>(null);
   const [showAppointmentAssignment, setShowAppointmentAssignment] = useState(false);
   const [selectedAppointmentForAssignment, setSelectedAppointmentForAssignment] = useState<Appointment | null>(null);
+
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc' | null;
+    tab: string;
+  }>({
+    key: '',
+    direction: null,
+    tab: 'grievances'
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -252,6 +284,58 @@ export default function Dashboard() {
     }
   };
 
+  const handleSort = (key: string, tab: string) => {
+    let direction: 'asc' | 'desc' | null = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = null;
+    }
+    setSortConfig({ key, direction, tab });
+  };
+
+  const getSortedData = (data: any[], tab: string) => {
+    if (sortConfig.tab !== tab || !sortConfig.key || !sortConfig.direction) {
+      return data;
+    }
+
+    return [...data].sort((a, b) => {
+      let aValue: any = a[sortConfig.key];
+      let bValue: any = b[sortConfig.key];
+
+      // Handle nested objects (like department name)
+      if (sortConfig.key.includes('.')) {
+        const parts = sortConfig.key.split('.');
+        aValue = parts.reduce((obj, key) => obj?.[key], a);
+        bValue = parts.reduce((obj, key) => obj?.[key], b);
+      }
+
+      // String comparison
+      if (typeof aValue === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
+      }
+
+      // Date or number comparison
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const response = await userAPI.update(userId, { isActive: !currentStatus } as any);
+      if (response.success) {
+        toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+        fetchUsers();
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update user status');
+    }
+  };
+
   if (loading || !mounted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -338,7 +422,7 @@ export default function Dashboard() {
               {stats && (
                 <>
                   <Card 
-                    className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
+                    className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-blue-200/50 transition-all duration-300 cursor-pointer"
                     onClick={() => {
                       setActiveTab('grievances');
                       // Filter to show all grievances
@@ -361,7 +445,7 @@ export default function Dashboard() {
                   </Card>
 
                   <Card 
-                    className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
+                    className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-green-200/50 transition-all duration-300 cursor-pointer"
                     onClick={() => {
                       setActiveTab('grievances');
                       // Could filter to show only resolved
@@ -384,7 +468,7 @@ export default function Dashboard() {
                   </Card>
 
                   <Card 
-                    className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
+                    className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-purple-200/50 transition-all duration-300 cursor-pointer"
                     onClick={() => {
                       setActiveTab('appointments');
                     }}
@@ -407,7 +491,7 @@ export default function Dashboard() {
 
                   {(isCompanyAdmin || isDepartmentAdmin) && (
                     <Card 
-                      className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
+                      className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-orange-200/50 transition-all duration-300 cursor-pointer"
                       onClick={() => {
                         setActiveTab('departments');
                       }}
@@ -432,27 +516,86 @@ export default function Dashboard() {
 
             {/* Company Info (for Company Admin) - Moved below tiles */}
             {isCompanyAdmin && company && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Company Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Company Name</p>
-                      <p className="text-lg font-semibold">{company.name}</p>
+              <Card className="overflow-hidden border-0 shadow-lg bg-white">
+                <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <Building className="text-white w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white leading-tight">{company.name}</h3>
+                        <p className="text-gray-400 text-xs uppercase tracking-widest font-bold">Company Profile</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Company Type</p>
-                      <p className="text-lg font-semibold">{company.companyType}</p>
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                        {company.companyType}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Contact Email</p>
-                      <p className="text-lg font-semibold">{company.contactEmail}</p>
+                  </div>
+                </div>
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x border-b border-gray-100">
+                    <div className="p-6">
+                      <div className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        <UserIcon className="w-3.5 h-3.5 mr-1.5" />
+                        Total Users
+                      </div>
+                      <div className="flex items-baseline space-x-2">
+                        <span className="text-2xl font-black text-gray-900">{users.length}</span>
+                        <span className="text-xs text-green-500 font-bold">Active</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Contact Phone</p>
-                      <p className="text-lg font-semibold">{company.contactPhone}</p>
+                    <div className="p-6">
+                      <div className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        <Building className="w-3.5 h-3.5 mr-1.5" />
+                        Departments
+                      </div>
+                      <div className="flex items-baseline space-x-2">
+                        <span className="text-2xl font-black text-gray-900">{departments.length}</span>
+                        <span className="text-xs text-blue-500 font-bold">Managed</span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        <Mail className="w-3.5 h-3.5 mr-1.5" />
+                        Contact Email
+                      </div>
+                      <div className="text-sm font-bold text-gray-900 truncate">{company.contactEmail}</div>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        <Phone className="w-3.5 h-3.5 mr-1.5" />
+                        Contact Phone
+                      </div>
+                      <div className="text-sm font-bold text-gray-900">{company.contactPhone}</div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50/50 p-6">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                      <div className="flex items-center space-x-6">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Grievances</span>
+                          <div className="flex items-center mt-1">
+                            <span className="text-sm font-bold text-gray-900">{stats?.grievances.total || 0}</span>
+                            <span className="mx-2 text-gray-300 text-[10px]|">|</span>
+                            <span className="text-xs font-medium text-amber-600">{stats?.grievances.pending || 0} Pending</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Appointments</span>
+                          <div className="flex items-center mt-1">
+                            <span className="text-sm font-bold text-gray-900">{stats?.appointments.total || 0}</span>
+                            <span className="mx-2 text-gray-300 text-[10px]|">|</span>
+                            <span className="text-xs font-medium text-purple-600">{stats?.appointments.confirmed || 0} Confirmed</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-xs font-bold text-gray-500">System Online</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -524,9 +667,7 @@ export default function Dashboard() {
                         permission={Permission.CREATE_DEPARTMENT}
                         onClick={() => setShowDepartmentDialog(true)}
                       >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        <UserPlus className="w-4 h-4 mr-2" />
                         Add Department
                       </ProtectedButton>
                     )}
@@ -538,46 +679,84 @@ export default function Dashboard() {
                       <p className="text-gray-500">No departments found</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {departments.map((dept) => (
-                        <div key={dept._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 
-                                className="font-semibold text-lg text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                                onClick={() => {
-                                  setSelectedDepartmentId(dept._id);
-                                  router.push(`/dashboard/department/${dept._id}`);
-                                }}
+                    <div className="border rounded-xl overflow-hidden shadow-sm bg-white">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-gray-50/50 border-b border-gray-100">
+                            <th className="px-6 py-4 text-left">
+                              <button 
+                                onClick={() => handleSort('name', 'departments')}
+                                className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
                               >
-                                {dept.name}
-                              </h4>
-                              <p className="text-sm text-gray-500">{dept.departmentId}</p>
-                              {dept.description && (
-                                <p className="text-sm text-gray-600 mt-1">{dept.description}</p>
-                              )}
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                              </span>
-                              {isCompanyAdmin && (
-                                <>
+                                <span>Department Name</span>
+                                <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                              </button>
+                            </th>
+                            <th className="px-6 py-4 text-left">
+                              <button 
+                                onClick={() => handleSort('departmentId', 'departments')}
+                                className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                              >
+                                <span>Dept ID</span>
+                                <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'departmentId' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                              </button>
+                            </th>
+                            <th className="px-6 py-4 text-left font-bold text-[11px] text-gray-500 uppercase tracking-wider">Description</th>
+                            <th className="px-6 py-4 text-left font-bold text-[11px] text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-right font-bold text-[11px] text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {getSortedData(departments, 'departments').map((dept) => (
+                            <tr key={dept._id} className="hover:bg-gray-50/50 transition-all duration-200 group/row">
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <Building className="w-5 h-5" />
+                                  </div>
+                                  <div className="ml-3">
+                                    <div 
+                                      className="text-sm font-bold text-gray-900 group-hover:text-blue-600 cursor-pointer hover:underline"
+                                      onClick={() => {
+                                        setSelectedDepartmentId(dept._id);
+                                        router.push(`/dashboard/department/${dept._id}`);
+                                      }}
+                                    >
+                                      {dept.name}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 uppercase">
+                                  {dept.departmentId}
+                                </span>
+                              </td>
+                              <td className="px-6 py-5">
+                                <p className="text-sm text-gray-500 truncate max-w-xs">{dept.description || 'No description provided'}</p>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <span className="px-2.5 py-0.5 inline-flex items-center text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 ring-1 ring-emerald-200 shadow-sm">
+                                  Active
+                                </span>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                                <div className="flex justify-end items-center space-x-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-blue-600 hover:text-blue-900"
+                                    className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                                     onClick={() => {
                                       setEditingDepartment(dept);
                                       setShowDepartmentDialog(true);
                                     }}
                                   >
-                                    Edit
+                                    <Edit2 className="w-4 h-4" />
                                   </Button>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-red-600 hover:text-red-900"
+                                    className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
                                     onClick={() => {
                                       setConfirmDialog({
                                         isOpen: true,
@@ -589,26 +768,28 @@ export default function Dashboard() {
                                             if (response.success) {
                                               toast.success('Department deleted successfully');
                                               fetchDepartments();
-                                              setConfirmDialog({ ...confirmDialog, isOpen: false });
-                                            } else {
-                                              toast.error('Failed to delete department');
                                             }
                                           } catch (error: any) {
                                             toast.error(error.message || 'Failed to delete department');
+                                          } finally {
+                                            setConfirmDialog(p => ({ ...p, isOpen: false }));
                                           }
                                         },
                                         variant: 'danger'
-                                      });
+                                      } as any);
                                     }}
                                   >
-                                    Delete
+                                    <Trash2 className="w-4 h-4" />
                                   </Button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                                </div>
+                                <div className="group-hover/row:hidden">
+                                  <MoreVertical className="w-5 h-5 text-gray-400 ml-auto" />
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </CardContent>
@@ -645,42 +826,181 @@ export default function Dashboard() {
                       <p className="text-gray-500">No users found</p>
                     </div>
                   ) : (
-                    <div className="border rounded-lg overflow-hidden">
+                    <div className="border rounded-xl overflow-hidden shadow-sm bg-white">
                       <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <thead>
+                          <tr className="bg-gray-50/50 border-b border-gray-100">
+                            <th className="px-6 py-4 text-left">
+                              <button 
+                                onClick={() => handleSort('firstName', 'users')}
+                                className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                              >
+                                <span>User Info</span>
+                                <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'firstName' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                              </button>
+                            </th>
+                            <th className="px-6 py-4 text-left">
+                              <button 
+                                onClick={() => handleSort('email', 'users')}
+                                className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                              >
+                                <span>Contact Information</span>
+                                <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'email' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                              </button>
+                            </th>
+                            <th className="px-6 py-4 text-left">
+                              <button 
+                                onClick={() => handleSort('role', 'users')}
+                                className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                              >
+                                <span>Role & Dept</span>
+                                <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'role' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                              </button>
+                            </th>
+                            <th className="px-6 py-4 text-left">
+                              <button 
+                                onClick={() => handleSort('isActive', 'users')}
+                                className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                              >
+                                <span>Status & Access</span>
+                                <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'isActive' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                              </button>
+                            </th>
+                            <th className="px-6 py-4 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {users.map((u) => (
-                            <tr key={u._id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
+                        <tbody className="divide-y divide-gray-100">
+                          {getSortedData(users, 'users').map((u) => (
+                            <tr key={u._id} className="hover:bg-gray-50/50 transition-all duration-200 group/row">
+                              <td className="px-6 py-5 whitespace-nowrap">
                                 <div className="flex items-center">
-                                  <div className="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                    {u.firstName[0]}{u.lastName[0]}
+                                  <div className="relative">
+                                    <div className="flex-shrink-0 h-12 w-12 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm border-2 border-white ring-1 ring-gray-100">
+                                      {u.firstName[0]}{u.lastName[0]}
+                                    </div>
+                                    <div className={`absolute bottom-0 right-0 h-3.5 w-3.5 border-2 border-white rounded-full shadow-sm ${u.isActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                                   </div>
                                   <div className="ml-4">
-                                    <div className="text-sm font-medium text-gray-900">
+                                    <div className="text-sm font-bold text-gray-900 leading-tight">
                                       {u.firstName} {u.lastName}
                                     </div>
-                                    <div className="text-sm text-gray-500">{u.userId}</div>
+                                    <div className="mt-1">
+                                      <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-tighter">
+                                        ID: {u.userId}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.email}</td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                  {u.role}
-                                </span>
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <div className="flex flex-col space-y-1.5">
+                                  <div className="flex items-center text-sm text-blue-600 font-medium">
+                                    <Mail className="w-3.5 h-3.5 mr-2 text-blue-400" />
+                                    {u.email}
+                                  </div>
+                                  {u.phone && (
+                                    <div className="flex items-center text-xs text-gray-500">
+                                      <Phone className="w-3.5 h-3.5 mr-2 text-gray-400" />
+                                      {u.phone}
+                                    </div>
+                                  )}
+                                </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                  {u.isActive ? 'Active' : 'Inactive'}
-                                </span>
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <div className="flex flex-col space-y-2">
+                                  <div className="flex">
+                                    <span className={`px-2.5 py-0.5 inline-flex items-center text-[10px] font-bold rounded-full border shadow-sm ${
+                                      u.role === 'COMPANY_ADMIN' ? 'bg-red-50 text-red-700 border-red-100 ring-1 ring-red-200' :
+                                      u.role === 'DEPARTMENT_ADMIN' ? 'bg-blue-50 text-blue-700 border-blue-100 ring-1 ring-blue-200' :
+                                      'bg-emerald-50 text-emerald-700 border-emerald-100 ring-1 ring-emerald-200'
+                                    }`}>
+                                      <Shield className="w-2.5 h-2.5 mr-1" />
+                                      {u.role.replace('_', ' ')}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-500 font-medium ml-1">
+                                    <Building className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
+                                    {typeof u.departmentId === 'object' ? u.departmentId.name : 'All Company Access'}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <div className="flex flex-col space-y-2.5">
+                                  <div className="flex items-center">
+                                    <div className={`h-2 w-2 rounded-full mr-2 ${u.isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                                    <span className={`text-xs font-bold ${u.isActive ? 'text-green-700' : 'text-gray-500'}`}>
+                                      {u.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <button 
+                                      onClick={() => handleToggleUserStatus(u._id, u.isActive)}
+                                      className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${u.isActive ? 'bg-green-500' : 'bg-red-400'}`}
+                                    >
+                                      <span className="sr-only">Toggle user status</span>
+                                      <span
+                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${u.isActive ? 'translate-x-5' : 'translate-x-1'}`}
+                                      />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleToggleUserStatus(u._id, u.isActive)}
+                                      className={`ml-2 text-[10px] font-bold uppercase tracking-wider ${u.isActive ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'} hover:underline transition-colors`}
+                                    >
+                                      {u.isActive ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap text-right">
+                                <div className="flex justify-end items-center space-x-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                    title="Edit User"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
+                                    title="Change Permissions"
+                                  >
+                                    <Shield className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                    title="Delete User"
+                                    onClick={() => {
+                                      setConfirmDialog({
+                                        isOpen: true,
+                                        title: 'Delete User',
+                                        message: `Are you sure you want to delete ${u.firstName} ${u.lastName}? This action cannot be undone.`,
+                                        onConfirm: async () => {
+                                          try {
+                                            const response = await userAPI.delete(u._id);
+                                            if (response.success) {
+                                              toast.success('User deleted successfully');
+                                              fetchUsers();
+                                            }
+                                          } catch (error: any) {
+                                            toast.error(error.message || 'Failed to delete user');
+                                          } finally {
+                                            setConfirmDialog(p => ({ ...p, isOpen: false }));
+                                          }
+                                        }
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                                <div className="group-hover/row:hidden">
+                                  <MoreVertical className="w-5 h-5 text-gray-400 ml-auto" />
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -711,82 +1031,168 @@ export default function Dashboard() {
                     <p className="text-gray-500">No grievances found</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {grievances.map((grievance) => (
-                      <div key={grievance._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-3 flex-wrap">
-                              <h4 
-                                className="font-semibold text-lg text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors"
-                                onClick={async () => {
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr className="whitespace-nowrap underline-offset-4">
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('grievanceId', 'grievances')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                            >
+                              <span>App No</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'grievanceId' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('citizenName', 'grievances')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                            >
+                              <span>Citizen</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'citizenName' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('category', 'grievances')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                            >
+                              <span>Dept & Category</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'category' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('status', 'grievances')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                            >
+                              <span>Status</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'status' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('createdAt', 'grievances')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                            >
+                              <span>Raised On</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'createdAt' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-center text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {getSortedData(grievances, 'grievances').map((grievance) => (
+                          <tr key={grievance._id} className="hover:bg-blue-50/30 transition-colors">
+                            <td className="px-4 py-4">
+                              <span className="font-bold text-sm text-blue-700">{grievance.grievanceId}</span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const response = await grievanceAPI.getById(grievance._id);
+                                      if (response.success) {
+                                        setSelectedGrievance(response.data.grievance);
+                                        setShowGrievanceDetail(true);
+                                      }
+                                    } catch (error: any) {
+                                      toast.error('Failed to load grievance details');
+                                    }
+                                  }}
+                                  className="text-gray-900 font-bold text-sm text-left hover:text-blue-600 hover:underline"
+                                >
+                                  {grievance.citizenName}
+                                </button>
+                                <span className="text-xs text-gray-500">{grievance.citizenPhone}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-gray-700">
+                                  {typeof grievance.departmentId === 'object' ? (grievance.departmentId as any).name : 'General'}
+                                </span>
+                                <span className="text-[10px] text-blue-500 uppercase">{grievance.category}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <select
+                                value={grievance.status}
+                                onChange={async (e) => {
                                   try {
-                                    const response = await grievanceAPI.getById(grievance._id);
+                                    const response = await grievanceAPI.updateStatus(grievance._id, e.target.value);
                                     if (response.success) {
-                                      setSelectedGrievance(response.data.grievance);
-                                      setShowGrievanceDetail(true);
+                                      toast.success('Status updated successfully');
+                                      fetchGrievances();
+                                    } else {
+                                      toast.error('Failed to update status');
                                     }
                                   } catch (error: any) {
-                                    toast.error('Failed to load grievance details');
+                                    toast.error(error.message || 'Failed to update status');
                                   }
                                 }}
+                                className="px-2 py-1 text-[10px] font-bold border border-gray-200 rounded bg-white hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase tracking-tight"
                               >
-                                {grievance.citizenName}
-                              </h4>
-                              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
-                                {grievance.grievanceId}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">{grievance.citizenPhone}</p>
-                            <p className="text-gray-700 line-clamp-2 mb-2">{grievance.description}</p>
-                            {grievance.category && (
-                              <span className="inline-block mt-2 px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
-                                {grievance.category}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0 flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedGrievanceForAssignment(grievance);
-                                setShowGrievanceAssignment(true);
-                              }}
-                              className="whitespace-nowrap"
-                            >
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                              Assign
-                            </Button>
-                            <select
-                              value={grievance.status}
-                              onChange={async (e) => {
-                                try {
-                                  const response = await grievanceAPI.updateStatus(grievance._id, e.target.value);
-                                  if (response.success) {
-                                    toast.success('Status updated successfully');
-                                    fetchGrievances();
-                                  } else {
-                                    toast.error('Failed to update status');
-                                  }
-                                } catch (error: any) {
-                                  toast.error(error.message || 'Failed to update status');
-                                }
-                              }}
-                              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[140px]"
-                            >
-                              <option value="PENDING">PENDING</option>
-                              <option value="ASSIGNED">ASSIGNED</option>
-                              <option value="IN_PROGRESS">IN_PROGRESS</option>
-                              <option value="RESOLVED">RESOLVED</option>
-                              <option value="CLOSED">CLOSED</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                                <option value="PENDING">PENDING</option>
+                                <option value="ASSIGNED">ASSIGNED</option>
+                                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                <option value="RESOLVED">RESOLVED</option>
+                                <option value="CLOSED">CLOSED</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-4 text-xs text-gray-600">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{new Date(grievance.createdAt).toLocaleDateString()}</span>
+                                <span className="text-[10px] text-gray-400">{new Date(grievance.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedGrievanceForAssignment(grievance);
+                                    setShowGrievanceAssignment(true);
+                                  }}
+                                  title="Assign"
+                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await grievanceAPI.getById(grievance._id);
+                                      if (response.success) {
+                                        setSelectedGrievance(response.data.grievance);
+                                        setShowGrievanceDetail(true);
+                                      }
+                                    } catch (error: any) {
+                                      toast.error('Failed to load details');
+                                    }
+                                  }}
+                                  title="View"
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
@@ -811,82 +1217,168 @@ export default function Dashboard() {
                     <p className="text-gray-500">No appointments found</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {appointments.map((appointment) => (
-                      <div key={appointment._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-3 flex-wrap">
-                              <h4 
-                                className="font-semibold text-lg text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors"
-                                onClick={async () => {
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr className="whitespace-nowrap">
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('appointmentId', 'appointments')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+                            >
+                              <span>App ID</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'appointmentId' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('citizenName', 'appointments')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+                            >
+                              <span>Citizen</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'citizenName' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('purpose', 'appointments')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+                            >
+                              <span>Dept & Purpose</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'purpose' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('appointmentDate', 'appointments')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+                            >
+                              <span>Scheduled At</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'appointmentDate' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-left">
+                            <button 
+                              onClick={() => handleSort('status', 'appointments')}
+                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-purple-600 transition-colors"
+                            >
+                              <span>Status</span>
+                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'status' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-center text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {getSortedData(appointments, 'appointments').map((appointment) => (
+                          <tr key={appointment._id} className="hover:bg-purple-50/30 transition-colors">
+                            <td className="px-4 py-4">
+                              <span className="font-bold text-sm text-purple-700">{appointment.appointmentId}</span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const response = await appointmentAPI.getById(appointment._id);
+                                      if (response.success) {
+                                        setSelectedAppointment(response.data.appointment);
+                                        setShowAppointmentDetail(true);
+                                      }
+                                    } catch (error: any) {
+                                      toast.error('Failed to load details');
+                                    }
+                                  }}
+                                  className="text-gray-900 font-bold text-sm text-left hover:text-purple-600 hover:underline"
+                                >
+                                  {appointment.citizenName}
+                                </button>
+                                <span className="text-xs text-gray-500">{appointment.citizenPhone}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col max-w-[150px]">
+                                <span className="text-xs font-semibold text-gray-700 truncate">
+                                  {typeof appointment.departmentId === 'object' ? (appointment.departmentId as any).name : 'General'}
+                                </span>
+                                <span className="text-[10px] text-gray-500 truncate italic">{appointment.purpose}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-xs">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-700">{new Date(appointment.appointmentDate).toLocaleDateString()}</span>
+                                <span className="text-[10px] text-amber-600 font-medium">{appointment.appointmentTime}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <select
+                                value={appointment.status}
+                                onChange={async (e) => {
                                   try {
-                                    const response = await appointmentAPI.getById(appointment._id);
+                                    const response = await appointmentAPI.updateStatus(appointment._id, e.target.value);
                                     if (response.success) {
-                                      setSelectedAppointment(response.data.appointment);
-                                      setShowAppointmentDetail(true);
+                                      toast.success('Status updated successfully');
+                                      fetchAppointments();
+                                    } else {
+                                      toast.error('Failed to update status');
                                     }
                                   } catch (error: any) {
-                                    toast.error('Failed to load appointment details');
+                                    toast.error(error.message || 'Failed to update status');
                                   }
                                 }}
+                                className="px-2 py-1 text-[10px] font-bold border border-gray-200 rounded bg-white hover:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-500 uppercase tracking-tight"
                               >
-                                {appointment.citizenName}
-                              </h4>
-                              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 whitespace-nowrap">
-                                {appointment.appointmentId}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                              <span className="font-medium">Purpose:</span> {appointment.purpose}
-                            </p>
-                            <p className="text-sm text-gray-600 mb-2">
-                              <span className="font-medium">Date:</span> {new Date(appointment.appointmentDate).toLocaleDateString()} at {appointment.appointmentTime}
-                            </p>
-                            <p className="text-sm text-gray-600">{appointment.citizenPhone}</p>
-                          </div>
-                          <div className="flex-shrink-0 flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedAppointmentForAssignment(appointment);
-                                setShowAppointmentAssignment(true);
-                              }}
-                              className="whitespace-nowrap"
-                            >
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                              Assign
-                            </Button>
-                            <select
-                              value={appointment.status}
-                              onChange={async (e) => {
-                                try {
-                                  const response = await appointmentAPI.updateStatus(appointment._id, e.target.value);
-                                  if (response.success) {
-                                    toast.success('Status updated successfully');
-                                    fetchAppointments();
-                                  } else {
-                                    toast.error('Failed to update status');
-                                  }
-                                } catch (error: any) {
-                                  toast.error(error.message || 'Failed to update status');
-                                }
-                              }}
-                              className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[140px]"
-                            >
-                              <option value="PENDING">PENDING</option>
-                              <option value="CONFIRMED">CONFIRMED</option>
-                              <option value="COMPLETED">COMPLETED</option>
-                              <option value="CANCELLED">CANCELLED</option>
-                              <option value="NO_SHOW">NO_SHOW</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                                <option value="PENDING">PENDING</option>
+                                <option value="CONFIRMED">CONFIRMED</option>
+                                <option value="COMPLETED">COMPLETED</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                                <option value="NO_SHOW">NO_SHOW</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAppointmentForAssignment(appointment);
+                                    setShowAppointmentAssignment(true);
+                                  }}
+                                  title="Assign"
+                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await appointmentAPI.getById(appointment._id);
+                                      if (response.success) {
+                                        setSelectedAppointment(response.data.appointment);
+                                        setShowAppointmentDetail(true);
+                                      }
+                                    } catch (error: any) {
+                                      toast.error('Failed to load details');
+                                    }
+                                  }}
+                                  title="View"
+                                  className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
@@ -1627,10 +2119,10 @@ export default function Dashboard() {
             }}
             itemType="grievance"
             itemId={selectedGrievanceForAssignment._id}
-            companyId={typeof user.companyId === 'object' ? user.companyId._id : user.companyId}
+            companyId={typeof user.companyId === 'object' && user.companyId !== null ? user.companyId._id : user.companyId || ''}
             currentAssignee={selectedGrievanceForAssignment.assignedTo}
             currentDepartmentId={
-              typeof selectedGrievanceForAssignment.departmentId === 'object' 
+              selectedGrievanceForAssignment.departmentId && typeof selectedGrievanceForAssignment.departmentId === 'object' 
                 ? selectedGrievanceForAssignment.departmentId._id 
                 : selectedGrievanceForAssignment.departmentId
             }
@@ -1651,10 +2143,10 @@ export default function Dashboard() {
             }}
             itemType="appointment"
             itemId={selectedAppointmentForAssignment._id}
-            companyId={typeof user.companyId === 'object' ? user.companyId._id : user.companyId}
+            companyId={typeof user.companyId === 'object' && user.companyId !== null ? user.companyId._id : user.companyId || ''}
             currentAssignee={selectedAppointmentForAssignment.assignedTo}
             currentDepartmentId={
-              typeof selectedAppointmentForAssignment.departmentId === 'object' 
+              selectedAppointmentForAssignment.departmentId && typeof selectedAppointmentForAssignment.departmentId === 'object' 
                 ? selectedAppointmentForAssignment.departmentId._id 
                 : selectedAppointmentForAssignment.departmentId
             }

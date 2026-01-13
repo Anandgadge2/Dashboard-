@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { logger } from './logger.js';
+import { logger } from './logger';
 
 export const configureCloudinary = (): void => {
   try {

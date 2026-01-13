@@ -13,8 +13,8 @@ interface User {
   lastName: string;
   email: string;
   role: string;
-  companyId?: string;
-  departmentId?: string;
+  companyId?: string | { _id: string; name: string };
+  departmentId?: string | { _id: string; name: string };
   isActive: boolean;
 }
 
