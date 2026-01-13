@@ -36,7 +36,10 @@ export default function AssignmentDialog({
 
   useEffect(() => {
     if (isOpen) {
-      fetchData();
+      fetchDepartments();
+      // Reset users when dialog opens
+      setUsers([]);
+      setSearchQuery('');
     }
   }, [isOpen, companyId]);
 
@@ -51,15 +54,28 @@ export default function AssignmentDialog({
     }
   }, [departments, currentDepartmentId]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  // Fetch users when department is selected
+  useEffect(() => {
+    if (selectedDepartment && isOpen) {
+      fetchUsers();
+    }
+  }, [selectedDepartment, isOpen]);
+
+  const fetchDepartments = async () => {
     try {
-      // Fetch departments
       const deptRes = await departmentAPI.getAll({ companyId });
       if (deptRes.success) {
         setDepartments(deptRes.data.departments);
       }
+    } catch (error) {
+      toast.error('Failed to load departments');
+      console.error(error);
+    }
+  };
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
       // Fetch users (officers and employees)
       const usersRes = await userAPI.getAll({ 
         companyId,
@@ -73,7 +89,7 @@ export default function AssignmentDialog({
         setUsers(filteredUsers);
       }
     } catch (error) {
-      toast.error('Failed to load users and departments');
+      toast.error('Failed to load users');
       console.error(error);
     } finally {
       setLoading(false);

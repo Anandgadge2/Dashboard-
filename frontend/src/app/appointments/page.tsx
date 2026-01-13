@@ -22,7 +22,7 @@ export default function AppointmentsPage() {
   });
 
   // Extract companyId from user
-  const companyId = typeof user?.companyId === 'object' ? user.companyId._id : user?.companyId || '';
+  const companyId = typeof user?.companyId === 'object' ? (user.companyId as any)._id : user?.companyId || '';
 
   useEffect(() => {
     fetchAppointments();
