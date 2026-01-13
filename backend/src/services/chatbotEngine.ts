@@ -79,7 +79,9 @@ const translations = {
 };
 
 function getTranslation(key: string, language: 'en' | 'hi' | 'mr' = 'en'): string {
-  return translations[language]?.[key as keyof typeof translations.en] || translations.en[key as keyof typeof translations.en] || key;
+  const langData = translations[language] as any;
+  const enData = translations.en as any;
+  return langData?.[key] || enData[key] || key;
 }
 
 // Helper to get or create session
@@ -140,7 +142,7 @@ export async function processWhatsAppMessage(message: ChatbotMessage): Promise<a
     try {
       const transcription = await transcribeWhatsAppVoice(
         mediaUrl,
-        company.whatsappConfig.accessToken,
+        company.whatsappConfig?.accessToken || '', // Handle possible undefined
         session.language
       );
       
@@ -412,6 +414,7 @@ async function continueGrievanceFlow(
   message: ChatbotMessage,
   company: any
 ) {
+  const { buttonId } = message;
   switch (session.step) {
     case 'grievance_name':
       if (!userInput || userInput.length < 2) {
