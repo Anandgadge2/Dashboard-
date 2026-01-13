@@ -24,7 +24,7 @@ const WhatsAppSessionSchema: Schema = new Schema(
     companyId: {
       type: Schema.Types.ObjectId,
       ref: 'Company',
-      required: true,
+      required: false,
       index: true
     },
     currentFlow: {
