@@ -1397,424 +1397,6 @@ export default function Dashboard() {
                   </div>
                 ) : stats ? (
                   <div className="space-y-6">
-                    {/* KEY METRICS - Top Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {/* Resolution Rate */}
-                      <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200 hover:shadow-lg transition-all cursor-pointer" onClick={() => {
-                        const resolutionRate = stats.grievances.total > 0 
-                          ? ((stats.grievances.resolved / stats.grievances.total) * 100).toFixed(1)
-                          : '0.0';
-                        setSelectedMetric({
-                          title: 'Resolution Rate',
-                          description: 'Percentage of grievances successfully resolved',
-                          formula: '(Resolved ÷ Total) × 100',
-                          interpretation: `${resolutionRate}% of grievances resolved. ${parseFloat(resolutionRate) >= 70 ? 'Good performance!' : 'Needs improvement.'}`,
-                          currentValue: `${resolutionRate}%`,
-                          benchmark: '70-85%',
-                          icon: 'trending'
-                        });
-                        setShowMetricDialog(true);
-                      }}>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-green-800">Resolution Rate</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-3xl font-bold text-green-700">
-                            {stats.grievances.total > 0 ? ((stats.grievances.resolved / stats.grievances.total) * 100).toFixed(1) : '0.0'}%
-                          </div>
-                          <p className="text-xs text-green-600 mt-1">{stats.grievances.resolved} of {stats.grievances.total} resolved</p>
-                        </CardContent>
-                      </Card>
-
-                      {/* Completion Rate */}
-                      <Card className="bg-gradient-to-br from-blue-50 to-cyan-100 border-blue-200 hover:shadow-lg transition-all cursor-pointer" onClick={() => {
-                        const completionRate = stats.appointments.total > 0 
-                          ? ((stats.appointments.completed / stats.appointments.total) * 100).toFixed(1)
-                          : '0.0';
-                        setSelectedMetric({
-                          title: 'Completion Rate',
-                          description: 'Percentage of appointments completed',
-                          formula: '(Completed ÷ Total) × 100',
-                          interpretation: `${completionRate}% completion rate. ${parseFloat(completionRate) >= 75 ? 'Excellent!' : 'Room for improvement.'}`,
-                          currentValue: `${completionRate}%`,
-                          benchmark: '75-90%',
-                          icon: 'target'
-                        });
-                        setShowMetricDialog(true);
-                      }}>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-blue-800">Completion Rate</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-3xl font-bold text-blue-700">
-                            {stats.appointments.total > 0 ? ((stats.appointments.completed / stats.appointments.total) * 100).toFixed(1) : '0.0'}%
-                          </div>
-                          <p className="text-xs text-blue-600 mt-1">{stats.appointments.completed} of {stats.appointments.total} completed</p>
-                        </CardContent>
-                      </Card>
-
-                      {/* SLA Compliance */}
-                      {stats.grievances.slaComplianceRate !== undefined && (
-                        <Card className="bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200 hover:shadow-lg transition-all cursor-pointer" onClick={() => {
-                          const slaCompliance = stats.grievances.slaComplianceRate?.toFixed(1) || '0.0';
-                          setSelectedMetric({
-                            title: 'SLA Compliance',
-                            description: 'Service Level Agreement compliance rate',
-                            formula: '((Total - Breaches) ÷ Total) × 100',
-                            interpretation: `${slaCompliance}% SLA compliance. ${parseFloat(slaCompliance) >= 90 ? 'Outstanding!' : 'Focus on reducing resolution times.'}`,
-                            currentValue: `${slaCompliance}%`,
-                            benchmark: '90%+',
-                            icon: 'target'
-                          });
-                          setShowMetricDialog(true);
-                        }}>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-purple-800">SLA Compliance</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-3xl font-bold text-purple-700">
-                              {stats.grievances.slaComplianceRate?.toFixed(1)}%
-                            </div>
-                            <p className="text-xs text-purple-600 mt-1">{stats.grievances.slaBreached || 0} breaches</p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Avg Resolution Time */}
-                      {stats.grievances.avgResolutionDays !== undefined && (
-                        <Card className="bg-gradient-to-br from-orange-50 to-amber-100 border-orange-200 hover:shadow-lg transition-all cursor-pointer" onClick={() => {
-                          const avgDays = stats.grievances.avgResolutionDays?.toFixed(1) || '0.0';
-                          setSelectedMetric({
-                            title: 'Avg Resolution Time',
-                            description: 'Average time to resolve grievances',
-                            formula: 'Sum(Resolution Time) ÷ Resolved Count',
-                            interpretation: `Average of ${avgDays} days. ${parseFloat(avgDays) <= 5 ? 'Excellent response time!' : 'Consider process improvements.'}`,
-                            currentValue: `${avgDays} days`,
-                            benchmark: '3-5 days',
-                            icon: 'trending'
-                          });
-                          setShowMetricDialog(true);
-                        }}>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-orange-800">Avg Resolution Time</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-3xl font-bold text-orange-700">
-                              {stats.grievances.avgResolutionDays?.toFixed(1)}
-                            </div>
-                            <p className="text-xs text-orange-600 mt-1">Days</p>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-
-                    {/* STATUS DISTRIBUTION CHARTS */}
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">Grievance Status Distribution</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={280}>
-                            <PieChart>
-                              <defs>
-                                <linearGradient id="grievancePending" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#FFBB28" stopOpacity={0.9}/>
-                                  <stop offset="95%" stopColor="#FFBB28" stopOpacity={0.7}/>
-                                </linearGradient>
-                                <linearGradient id="grievanceInProgress" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#0088FE" stopOpacity={0.9}/>
-                                  <stop offset="95%" stopColor="#0088FE" stopOpacity={0.7}/>
-                                </linearGradient>
-                                <linearGradient id="grievanceResolved" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#00C49F" stopOpacity={0.9}/>
-                                  <stop offset="95%" stopColor="#00C49F" stopOpacity={0.7}/>
-                                </linearGradient>
-                              </defs>
-                              <Pie
-                                data={[
-                                  { name: 'Pending', value: stats.grievances.pending, fill: 'url(#grievancePending)' },
-                                  { name: 'In Progress', value: stats.grievances.inProgress, fill: 'url(#grievanceInProgress)' },
-                                  { name: 'Resolved', value: stats.grievances.resolved, fill: 'url(#grievanceResolved)' }
-                                ].filter(item => item.value > 0)}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={true}
-                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                                outerRadius={90}
-                                innerRadius={50}
-                                dataKey="value"
-                                paddingAngle={2}
-                              >
-                              </Pie>
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                                  border: '1px solid #e5e7eb',
-                                  borderRadius: '8px',
-                                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                                }}
-                              />
-                              <Legend 
-                                verticalAlign="bottom" 
-                                height={36}
-                                iconType="circle"
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Grievance Statistics</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={[
-                              { name: 'Total', value: stats.grievances.total },
-                              { name: 'Pending', value: stats.grievances.pending },
-                              { name: 'In Progress', value: stats.grievances.inProgress },
-                              { name: 'Resolved', value: stats.grievances.resolved }
-                            ]}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="name" />
-                              <YAxis />
-                              <Tooltip />
-                              <Bar dataKey="value" fill="#8884d8" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Appointment Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">Appointment Status Distribution</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={280}>
-                            <PieChart>
-                              <defs>
-                                <linearGradient id="appointmentPending" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#FFBB28" stopOpacity={0.9}/>
-                                  <stop offset="95%" stopColor="#FFBB28" stopOpacity={0.7}/>
-                                </linearGradient>
-                                <linearGradient id="appointmentConfirmed" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#0088FE" stopOpacity={0.9}/>
-                                  <stop offset="95%" stopColor="#0088FE" stopOpacity={0.7}/>
-                                </linearGradient>
-                                <linearGradient id="appointmentCompleted" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#00C49F" stopOpacity={0.9}/>
-                                  <stop offset="95%" stopColor="#00C49F" stopOpacity={0.7}/>
-                                </linearGradient>
-                              </defs>
-                              <Pie
-                                data={[
-                                  { name: 'Pending', value: stats.appointments.pending, fill: 'url(#appointmentPending)' },
-                                  { name: 'Confirmed', value: stats.appointments.confirmed, fill: 'url(#appointmentConfirmed)' },
-                                  { name: 'Completed', value: stats.appointments.completed, fill: 'url(#appointmentCompleted)' }
-                                ].filter(item => item.value > 0)}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={true}
-                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                                outerRadius={90}
-                                innerRadius={50}
-                                dataKey="value"
-                                paddingAngle={2}
-                              >
-                              </Pie>
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                                  border: '1px solid #e5e7eb',
-                                  borderRadius: '8px',
-                                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                                }}
-                              />
-                              <Legend 
-                                verticalAlign="bottom" 
-                                height={36}
-                                iconType="circle"
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Appointment Statistics</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={[
-                              { name: 'Total', value: stats.appointments.total },
-                              { name: 'Pending', value: stats.appointments.pending },
-                              { name: 'Confirmed', value: stats.appointments.confirmed },
-                              { name: 'Completed', value: stats.appointments.completed }
-                            ]}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="name" />
-                              <YAxis />
-                              <Tooltip />
-                              <Bar dataKey="value" fill="#00C49F" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Additional Analytics Charts */}
-                    {stats.grievances.byPriority && stats.grievances.byPriority.length > 0 && (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base">Grievances by Priority</CardTitle>
-                            <CardDescription>Distribution of grievances by priority level</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <ResponsiveContainer width="100%" height={250}>
-                              <BarChart data={stats.grievances.byPriority}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="priority" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="#8884d8" />
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </CardContent>
-                        </Card>
-
-                        {stats.appointments.byDepartment && stats.appointments.byDepartment.length > 0 && (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-base">Appointments by Department</CardTitle>
-                              <CardDescription>Distribution of appointments across departments</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={stats.appointments.byDepartment.map(dept => ({
-                                  ...dept,
-                                  departmentName: dept.departmentName.replace(/\s+Department$/i, '').trim()
-                                }))}>
-                                  <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="departmentName" angle={-45} textAnchor="end" height={100} />
-                                  <YAxis />
-                                  <Tooltip />
-                                  <Bar dataKey="count" fill="#00C49F" />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </div>
-                    )}
-
-                    {/* SLA and Performance Metrics */}
-                    {stats.grievances.slaComplianceRate !== undefined && (
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg">SLA Compliance</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-center">
-                              <p className="text-4xl font-bold text-green-600">
-                                {stats.grievances.slaComplianceRate?.toFixed(1)}%
-                              </p>
-                              <p className="text-sm text-gray-500 mt-2">Compliance Rate</p>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg">Avg Resolution Time</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-center">
-                              <p className="text-4xl font-bold text-blue-600">
-                                {stats.grievances.avgResolutionDays?.toFixed(1)}
-                              </p>
-                              <p className="text-sm text-gray-500 mt-2">Days</p>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg">Resolution Rate</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-center">
-                              <p className="text-4xl font-bold text-purple-600">
-                                {stats.grievances.resolutionRate.toFixed(1)}%
-                              </p>
-                              <p className="text-sm text-gray-500 mt-2">Success Rate</p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
-
-                    {/* Time Series Charts */}
-                    {stats.grievances.daily && stats.grievances.daily.length > 0 && (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base">Grievance Trends (Last 7 Days)</CardTitle>
-                            <CardDescription>Daily grievance creation trend</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <ResponsiveContainer width="100%" height={280}>
-                              <AreaChart data={stats.grievances.daily}>
-                                <defs>
-                                  <linearGradient id="colorGrievances" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrievances)" />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </CardContent>
-                        </Card>
-
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base">Appointment Trends (Last 7 Days)</CardTitle>
-                            <CardDescription>Daily appointment creation trend</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <ResponsiveContainer width="100%" height={280}>
-                              <AreaChart data={stats.appointments.daily}>
-                                <defs>
-                                  <linearGradient id="colorAppointments" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#00C49F" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#00C49F" stopOpacity={0}/>
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="count" stroke="#00C49F" fillOpacity={1} fill="url(#colorAppointments)" />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
-
                     {/* Interactive Performance Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <Card 
@@ -1969,48 +1551,267 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    {/* Grievance Priority and Department Distribution */}
-                    {(stats.grievances.byPriority || stats.appointments.byDepartment) && (
+                    {/* STATUS DISTRIBUTION CHARTS */}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Grievance Status Distribution</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={280}>
+                            <PieChart>
+                              <defs>
+                                <linearGradient id="grievancePending" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#FFBB28" stopOpacity={0.9}/>
+                                  <stop offset="95%" stopColor="#FFBB28" stopOpacity={0.7}/>
+                                </linearGradient>
+                                <linearGradient id="grievanceInProgress" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#0088FE" stopOpacity={0.9}/>
+                                  <stop offset="95%" stopColor="#0088FE" stopOpacity={0.7}/>
+                                </linearGradient>
+                                <linearGradient id="grievanceResolved" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#00C49F" stopOpacity={0.9}/>
+                                  <stop offset="95%" stopColor="#00C49F" stopOpacity={0.7}/>
+                                </linearGradient>
+                              </defs>
+                              <Pie
+                                data={[
+                                  { name: 'Pending', value: stats.grievances.pending, fill: 'url(#grievancePending)' },
+                                  { name: 'In Progress', value: stats.grievances.inProgress, fill: 'url(#grievanceInProgress)' },
+                                  { name: 'Resolved', value: stats.grievances.resolved, fill: 'url(#grievanceResolved)' }
+                                ].filter(item => item.value > 0)}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={true}
+                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                                outerRadius={90}
+                                innerRadius={50}
+                                dataKey="value"
+                                paddingAngle={2}
+                              >
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                  border: '1px solid #e5e7eb',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                                }}
+                              />
+                              <Legend 
+                                verticalAlign="bottom" 
+                                height={36}
+                                iconType="circle"
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Grievance Statistics</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={[
+                              { name: 'Total', value: stats.grievances.total },
+                              { name: 'Pending', value: stats.grievances.pending },
+                              { name: 'In Progress', value: stats.grievances.inProgress },
+                              { name: 'Resolved', value: stats.grievances.resolved }
+                            ]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="value" fill="#8884d8" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Appointment Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Appointment Status Distribution</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={280}>
+                            <PieChart>
+                              <defs>
+                                <linearGradient id="appointmentPending" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#FFBB28" stopOpacity={0.9}/>
+                                  <stop offset="95%" stopColor="#FFBB28" stopOpacity={0.7}/>
+                                </linearGradient>
+                                <linearGradient id="appointmentConfirmed" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#0088FE" stopOpacity={0.9}/>
+                                  <stop offset="95%" stopColor="#0088FE" stopOpacity={0.7}/>
+                                </linearGradient>
+                                <linearGradient id="appointmentCompleted" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#00C49F" stopOpacity={0.9}/>
+                                  <stop offset="95%" stopColor="#00C49F" stopOpacity={0.7}/>
+                                </linearGradient>
+                              </defs>
+                              <Pie
+                                data={[
+                                  { name: 'Pending', value: stats.appointments.pending, fill: 'url(#appointmentPending)' },
+                                  { name: 'Confirmed', value: stats.appointments.confirmed, fill: 'url(#appointmentConfirmed)' },
+                                  { name: 'Completed', value: stats.appointments.completed, fill: 'url(#appointmentCompleted)' }
+                                ].filter(item => item.value > 0)}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={true}
+                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                                outerRadius={90}
+                                innerRadius={50}
+                                dataKey="value"
+                                paddingAngle={2}
+                              >
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                  border: '1px solid #e5e7eb',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                                }}
+                              />
+                              <Legend 
+                                verticalAlign="bottom" 
+                                height={36}
+                                iconType="circle"
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Appointment Statistics</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={[
+                              { name: 'Total', value: stats.appointments.total },
+                              { name: 'Pending', value: stats.appointments.pending },
+                              { name: 'Confirmed', value: stats.appointments.confirmed },
+                              { name: 'Completed', value: stats.appointments.completed }
+                            ]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="value" fill="#00C49F" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Additional Analytics Charts */}
+                    {stats.grievances.byPriority && stats.grievances.byPriority.length > 0 && (
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {stats.grievances.byPriority && stats.grievances.byPriority.length > 0 && (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-lg">Grievances by Priority</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={stats.grievances.byPriority}>
-                                  <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="priority" />
-                                  <YAxis />
-                                  <Tooltip />
-                                  <Bar dataKey="count" fill="#8884d8" />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </CardContent>
-                          </Card>
-                        )}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Grievances by Priority</CardTitle>
+                            <CardDescription>Distribution of grievances by priority level</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={250}>
+                              <BarChart 
+                                data={stats.grievances.byPriority} 
+                                layout="vertical"
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis type="number" />
+                                <YAxis type="category" dataKey="priority" width={80} />
+                                <Tooltip />
+                                <Bar dataKey="count" fill="#8884d8" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
 
                         {stats.appointments.byDepartment && stats.appointments.byDepartment.length > 0 && (
                           <Card>
                             <CardHeader>
-                              <CardTitle className="text-lg">Appointments by Department</CardTitle>
+                              <CardTitle className="text-base">Appointments by Department</CardTitle>
+                              <CardDescription>Distribution of appointments across departments</CardDescription>
                             </CardHeader>
                             <CardContent>
                               <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={stats.appointments.byDepartment}>
+                                <BarChart data={stats.appointments.byDepartment.map((dept: any) => ({
+                                  ...dept,
+                                  departmentName: dept.departmentName.replace(/\s+Department$/i, '').trim()
+                                }))}>
                                   <CartesianGrid strokeDasharray="3 3" />
                                   <XAxis dataKey="departmentName" angle={-45} textAnchor="end" height={100} />
                                   <YAxis />
                                   <Tooltip />
-                                  <Legend />
-                                  <Bar dataKey="count" fill="#00C49F" name="Total" />
-                                  <Bar dataKey="completed" fill="#0088FE" name="Completed" />
+                                  <Bar dataKey="count" fill="#00C49F" />
                                 </BarChart>
                               </ResponsiveContainer>
                             </CardContent>
                           </Card>
                         )}
+                      </div>
+                    )}
+
+                    {/* Time Series Charts */}
+                    {stats.grievances.daily && stats.grievances.daily.length > 0 && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Grievance Trends (Last 7 Days)</CardTitle>
+                            <CardDescription>Daily grievance creation trend</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={280}>
+                              <AreaChart data={stats.grievances.daily}>
+                                <defs>
+                                  <linearGradient id="colorGrievances" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" />
+                                <YAxis />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrievances)" />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Appointment Trends (Last 7 Days)</CardTitle>
+                            <CardDescription>Daily appointment creation trend</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={280}>
+                              <AreaChart data={stats.appointments.daily}>
+                                <defs>
+                                  <linearGradient id="colorAppointments" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#00C49F" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#00C49F" stopOpacity={0}/>
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" />
+                                <YAxis />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="count" stroke="#00C49F" fillOpacity={1} fill="url(#colorAppointments)" />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
                       </div>
                     )}
 
@@ -2071,10 +1872,10 @@ export default function Dashboard() {
                               <CardDescription>Peak hours for grievance submissions (Last 7 Days)</CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <ResponsiveContainer width="100%" height={300}>
+                              <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={hourlyData.grievances}>
                                   <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="hour" label={{ value: 'Hour of Day', position: 'insideBottom', offset: -5 }} />
+                                  <XAxis dataKey="hour" label={{ value: 'Hour of Day', position: 'insideBottom', offset: -2 }} />
                                   <YAxis />
                                   <Tooltip />
                                   <Bar dataKey="count" fill="#8884d8" />
@@ -2091,10 +1892,10 @@ export default function Dashboard() {
                               <CardDescription>Peak hours for appointment bookings (Last 7 Days)</CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <ResponsiveContainer width="100%" height={300}>
+                              <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={hourlyData.appointments}>
                                   <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="hour" label={{ value: 'Hour of Day', position: 'insideBottom', offset: -5 }} />
+                                  <XAxis dataKey="hour" label={{ value: 'Hour of Day', position: 'insideBottom', offset: -2 }} />
                                   <YAxis />
                                   <Tooltip />
                                   <Bar dataKey="count" fill="#00C49F" />
@@ -2108,28 +1909,39 @@ export default function Dashboard() {
 
                     {/* Performance Metrics */}
                     {performanceData && (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {performanceData.topDepartments && performanceData.topDepartments.length > 0 && (
+                      <div className="grid">
+                        {/* {performanceData.topDepartments && performanceData.topDepartments.length > 0 && (
                           <Card>
                             <CardHeader>
                               <CardTitle className="text-lg">Top Performing Departments</CardTitle>
                               <CardDescription>Departments with highest resolution rates</CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={performanceData.topDepartments}>
+                              <ResponsiveContainer width="100%" height={250}>
+                                <BarChart 
+                                  data={performanceData.topDepartments.map((dept: any) => ({
+                                    ...dept,
+                                    departmentName: dept.departmentName.replace(/\s+Department$/i, '').trim()
+                                  }))}
+                                  layout="vertical"
+                                  margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                                >
                                   <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="departmentName" angle={-45} textAnchor="end" height={100} />
-                                  <YAxis />
+                                  <XAxis type="number" />
+                                  <YAxis type="category" dataKey="departmentName" width={90} />
                                   <Tooltip />
-                                  <Legend />
+                                  <Legend 
+                                    verticalAlign="top" 
+                                    align="right"
+                                    wrapperStyle={{ paddingBottom: '10px' }}
+                                  />
                                   <Bar dataKey="total" fill="#8884d8" name="Total" />
                                   <Bar dataKey="resolved" fill="#00C49F" name="Resolved" />
                                 </BarChart>
                               </ResponsiveContainer>
                             </CardContent>
                           </Card>
-                        )}
+                        )} */}
 
                         {performanceData.topOperators && performanceData.topOperators.length > 0 && (
                           <Card>
@@ -2138,7 +1950,7 @@ export default function Dashboard() {
                               <CardDescription>Operators with most resolved grievances</CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <ResponsiveContainer width="100%" height={300}>
+                              <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={performanceData.topOperators}>
                                   <CartesianGrid strokeDasharray="3 3" />
                                   <XAxis dataKey="userName" angle={-45} textAnchor="end" height={100} />
@@ -2162,12 +1974,25 @@ export default function Dashboard() {
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={categoryData}>
+                            <BarChart data={categoryData.map((item: any) => ({
+                              ...item,
+                              category: item.category.replace(/\s+Department$/i, '').trim()
+                            }))}>
                               <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
+                              <XAxis 
+                                dataKey="category" 
+                                angle={-45} 
+                                textAnchor="end" 
+                                height={120}
+                                interval={0}
+                              />
                               <YAxis />
                               <Tooltip />
-                              <Legend />
+                              <Legend 
+                                verticalAlign="top" 
+                                height={36}
+                                wrapperStyle={{ paddingBottom: '10px' }}
+                              />
                               <Bar dataKey="count" fill="#8884d8" name="Total" />
                               <Bar dataKey="resolved" fill="#00C49F" name="Resolved" />
                             </BarChart>
@@ -2178,43 +2003,65 @@ export default function Dashboard() {
 
                     {/* Summary Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Grievance Summary</CardTitle>
+                      <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200 shadow-lg">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl font-bold bg-gradient-to-r from-slate-700 to-blue-700 bg-clip-text text-transparent flex items-center gap-2">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Grievance Summary
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">Total Grievances:</span>
-                              <span className="font-bold text-lg">{stats.grievances.total}</span>
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                              <span className="text-slate-700 font-medium">Total Grievances:</span>
+                              <span className="font-bold text-2xl text-slate-800">{stats.grievances.total}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-yellow-600">Pending:</span>
-                              <span className="font-semibold">{stats.grievances.pending}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-blue-600">In Progress:</span>
-                              <span className="font-semibold">{stats.grievances.inProgress}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-green-600">Resolved:</span>
-                              <span className="font-semibold">{stats.grievances.resolved}</span>
-                            </div>
-                            {stats.grievances.closed !== undefined && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Closed:</span>
-                                <span className="font-semibold">{stats.grievances.closed}</span>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex flex-col p-3 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
+                                <span className="text-xs font-semibold text-yellow-700 mb-1">Pending:</span>
+                                <span className="font-bold text-xl text-yellow-800">{stats.grievances.pending}</span>
                               </div>
-                            )}
-                            <div className="mt-4 pt-4 border-t">
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Last 30 Days:</span>
-                                <span className="font-semibold">{stats.grievances.last30Days}</span>
+                              
+                              <div className="flex flex-col p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                                <span className="text-xs font-semibold text-blue-700 mb-1">In Progress:</span>
+                                <span className="font-bold text-xl text-blue-800">{stats.grievances.inProgress}</span>
+                              </div>
+                              
+                              <div className="flex flex-col p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                                <span className="text-xs font-semibold text-green-700 mb-1">Resolved:</span>
+                                <span className="font-bold text-xl text-green-800">{stats.grievances.resolved}</span>
+                              </div>
+                              
+                              {stats.grievances.closed !== undefined && (
+                                <div className="flex flex-col p-3 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-200">
+                                  <span className="text-xs font-semibold text-gray-700 mb-1">Closed:</span>
+                                  <span className="font-bold text-xl text-gray-800">{stats.grievances.closed}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                              <div className="flex justify-between items-center p-2 bg-white rounded-md">
+                                <span className="text-sm text-slate-600 flex items-center gap-1">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  Last 30 Days:
+                                </span>
+                                <span className="font-bold text-slate-800">{stats.grievances.last30Days}</span>
                               </div>
                               {stats.grievances.avgResolutionDays !== undefined && (
-                                <div className="flex justify-between items-center mt-2">
-                                  <span className="text-gray-600">Avg Resolution:</span>
-                                  <span className="font-semibold">{stats.grievances.avgResolutionDays} days</span>
+                                <div className="flex justify-between items-center p-2 bg-white rounded-md">
+                                  <span className="text-sm text-slate-600 flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Avg Resolution:
+                                  </span>
+                                  <span className="font-bold text-slate-800">{stats.grievances.avgResolutionDays} days</span>
                                 </div>
                               )}
                             </div>
@@ -2222,38 +2069,55 @@ export default function Dashboard() {
                         </CardContent>
                       </Card>
 
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Appointment Summary</CardTitle>
+                      <Card className="bg-gradient-to-br from-slate-50 to-purple-50 border-slate-200 shadow-lg">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl font-bold bg-gradient-to-r from-slate-700 to-purple-700 bg-clip-text text-transparent flex items-center gap-2">
+                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Appointment Summary
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">Total Appointments:</span>
-                              <span className="font-bold text-lg">{stats.appointments.total}</span>
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                              <span className="text-slate-700 font-medium">Total Appointments:</span>
+                              <span className="font-bold text-2xl text-slate-800">{stats.appointments.total}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-yellow-600">Pending:</span>
-                              <span className="font-semibold">{stats.appointments.pending}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-blue-600">Confirmed:</span>
-                              <span className="font-semibold">{stats.appointments.confirmed}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-green-600">Completed:</span>
-                              <span className="font-semibold">{stats.appointments.completed}</span>
-                            </div>
-                            {stats.appointments.cancelled !== undefined && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-red-600">Cancelled:</span>
-                                <span className="font-semibold">{stats.appointments.cancelled}</span>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex flex-col p-3 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
+                                <span className="text-xs font-semibold text-yellow-700 mb-1">Pending:</span>
+                                <span className="font-bold text-xl text-yellow-800">{stats.appointments.pending}</span>
                               </div>
-                            )}
-                            <div className="mt-4 pt-4 border-t">
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Last 30 Days:</span>
-                                <span className="font-semibold">{stats.appointments.last30Days}</span>
+                              
+                              <div className="flex flex-col p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                                <span className="text-xs font-semibold text-blue-700 mb-1">Confirmed:</span>
+                                <span className="font-bold text-xl text-blue-800">{stats.appointments.confirmed}</span>
+                              </div>
+                              
+                              <div className="flex flex-col p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                                <span className="text-xs font-semibold text-green-700 mb-1">Completed:</span>
+                                <span className="font-bold text-xl text-green-800">{stats.appointments.completed}</span>
+                              </div>
+                              
+                              {stats.appointments.cancelled !== undefined && (
+                                <div className="flex flex-col p-3 bg-gradient-to-br from-red-50 to-rose-50 rounded-lg border border-red-200">
+                                  <span className="text-xs font-semibold text-red-700 mb-1">Cancelled:</span>
+                                  <span className="font-bold text-xl text-red-800">{stats.appointments.cancelled}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                              <div className="flex justify-between items-center p-2 bg-white rounded-md">
+                                <span className="text-sm text-slate-600 flex items-center gap-1">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  Last 30 Days:
+                                </span>
+                                <span className="font-bold text-slate-800">{stats.appointments.last30Days}</span>
                               </div>
                             </div>
                           </div>

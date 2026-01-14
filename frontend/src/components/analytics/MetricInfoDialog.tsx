@@ -63,7 +63,7 @@ export default function MetricInfoDialog({ isOpen, onClose, metric }: MetricInfo
           </div>
 
           {/* Formula */}
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          {/* <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3 flex items-center">
               <Calculator className="w-4 h-4 mr-2" />
               Calculation Formula
@@ -71,7 +71,7 @@ export default function MetricInfoDialog({ isOpen, onClose, metric }: MetricInfo
             <div className="bg-white rounded p-4 border border-gray-300">
               <code className="text-sm font-mono text-gray-800">{metric.formula}</code>
             </div>
-          </div>
+          </div> */}
 
           {/* Interpretation */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-100">
