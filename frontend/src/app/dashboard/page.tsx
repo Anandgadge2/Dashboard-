@@ -251,7 +251,23 @@ export default function Dashboard() {
     try {
       const response = await userAPI.getAll();
       if (response.success) {
-        setUsers(response.data.users);
+        let filteredUsers = response.data.users;
+        
+        // Filter users by department for department admins
+        if (isDepartmentAdmin && user?.departmentId) {
+          const userDeptId = typeof user.departmentId === 'object' && user.departmentId !== null 
+            ? user.departmentId._id 
+            : user.departmentId;
+          
+          filteredUsers = filteredUsers.filter((u: any) => {
+            const uDeptId = typeof u.departmentId === 'object' && u.departmentId !== null
+              ? u.departmentId._id
+              : u.departmentId;
+            return uDeptId === userDeptId;
+          });
+        }
+        
+        setUsers(filteredUsers);
       }
     } catch (error: any) {
       console.error('Failed to fetch users:', error);
@@ -485,7 +501,7 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
-                  {(isCompanyAdmin || isDepartmentAdmin) && (
+                  {isCompanyAdmin && (
                     <Card 
                       className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-orange-200/50 transition-all duration-300 cursor-pointer"
                       onClick={() => {
@@ -649,16 +665,65 @@ export default function Dashboard() {
           {/* Departments Tab */}
           {(isCompanyAdmin || isDepartmentAdmin) && (
             <TabsContent value="departments" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Department Management</CardTitle>
-                      <CardDescription>
-                        {isCompanyAdmin ? 'Manage all departments in your company' : 'View your department'}
-                      </CardDescription>
-                    </div>
-                    {isCompanyAdmin && (
+              {isDepartmentAdmin ? (
+                // Department Admin View - Show only their department
+                <Card>
+                  <CardHeader>
+                    <CardTitle>My Department</CardTitle>
+                    <CardDescription>
+                      View your department information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {departments.length > 0 ? (
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                        <div className="flex items-start space-x-4">
+                          <div className="flex-shrink-0 h-16 w-16 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg">
+                            <Building className="w-8 h-8" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">{departments[0].name}</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              <div>
+                                <p className="text-sm text-gray-600 font-medium">Department ID</p>
+                                <p className="text-sm font-mono bg-white px-2 py-1 rounded border border-gray-200 inline-block mt-1">
+                                  {departments[0].departmentId}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-600 font-medium">Status</p>
+                                <span className="px-3 py-1 inline-flex items-center text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 mt-1">
+                                  Active
+                                </span>
+                              </div>
+                              <div className="md:col-span-2">
+                                <p className="text-sm text-gray-600 font-medium">Description</p>
+                                <p className="text-sm text-gray-700 mt-1">
+                                  {departments[0].description || 'No description provided'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No department information available</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                // Company Admin View - Show all departments
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Department Management</CardTitle>
+                        <CardDescription>
+                          Manage all departments in your company
+                        </CardDescription>
+                      </div>
                       <ProtectedButton
                         permission={Permission.CREATE_DEPARTMENT}
                         onClick={() => setShowDepartmentDialog(true)}
@@ -666,129 +731,129 @@ export default function Dashboard() {
                         <UserPlus className="w-4 h-4 mr-2" />
                         Add Department
                       </ProtectedButton>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {departments.length === 0 ? (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500">No departments found</p>
                     </div>
-                  ) : (
-                    <div className="border rounded-xl overflow-hidden shadow-sm bg-white">
-                      <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-                        <table className="w-full relative border-collapse">
-                          <thead className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur-sm shadow-sm">
-                            <tr className="border-b border-gray-100">
-                              <th className="px-6 py-4 text-left">
-                                <button 
-                                  onClick={() => handleSort('name', 'departments')}
-                                  className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                                >
-                                  <span>Department Name</span>
-                                  <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
-                                </button>
-                              </th>
-                              <th className="px-6 py-4 text-left">
-                                <button 
-                                  onClick={() => handleSort('departmentId', 'departments')}
-                                  className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                                >
-                                  <span>Dept ID</span>
-                                  <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'departmentId' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
-                                </button>
-                              </th>
-                              <th className="px-6 py-4 text-left font-bold text-[11px] text-gray-500 uppercase tracking-wider">Description</th>
-                              <th className="px-6 py-4 text-left font-bold text-[11px] text-gray-500 uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-4 text-right font-bold text-[11px] text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100 bg-white">
-                            {getSortedData(departments, 'departments').map((dept) => (
-                              <tr key={dept._id} className="hover:bg-gray-50/50 transition-colors duration-150 group/row">
-                                <td className="px-6 py-5 whitespace-nowrap">
-                                  <div className="flex items-center">
-                                    <div className="flex-shrink-0 h-10 w-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                                      <Building className="w-5 h-5" />
-                                    </div>
-                                    <div className="ml-3">
-                                      <div 
-                                        className="text-sm font-bold text-gray-900 group-hover:text-blue-600 cursor-pointer hover:underline"
-                                        onClick={() => {
-                                          setSelectedDepartmentId(dept._id);
-                                          router.push(`/dashboard/department/${dept._id}`);
-                                        }}
-                                      >
-                                        {dept.name}
+                  </CardHeader>
+                  <CardContent>
+                    {departments.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No departments found</p>
+                      </div>
+                    ) : (
+                      <div className="border rounded-xl overflow-hidden shadow-sm bg-white">
+                        <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                          <table className="w-full relative border-collapse">
+                            <thead className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur-sm shadow-sm">
+                              <tr className="border-b border-gray-100">
+                                <th className="px-6 py-4 text-left">
+                                  <button 
+                                    onClick={() => handleSort('name', 'departments')}
+                                    className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                                  >
+                                    <span>Department Name</span>
+                                    <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                                  </button>
+                                </th>
+                                <th className="px-6 py-4 text-left">
+                                  <button 
+                                    onClick={() => handleSort('departmentId', 'departments')}
+                                    className="group flex items-center space-x-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                                  >
+                                    <span>Dept ID</span>
+                                    <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'departmentId' ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`} />
+                                  </button>
+                                </th>
+                                <th className="px-6 py-4 text-left font-bold text-[11px] text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-4 text-left font-bold text-[11px] text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right font-bold text-[11px] text-gray-500 uppercase tracking-wider">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 bg-white">
+                              {getSortedData(departments, 'departments').map((dept) => (
+                                <tr key={dept._id} className="hover:bg-gray-50/50 transition-colors duration-150 group/row">
+                                  <td className="px-6 py-5 whitespace-nowrap">
+                                    <div className="flex items-center">
+                                      <div className="flex-shrink-0 h-10 w-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                                        <Building className="w-5 h-5" />
+                                      </div>
+                                      <div className="ml-3">
+                                        <div 
+                                          className="text-sm font-bold text-gray-900 group-hover:text-blue-600 cursor-pointer hover:underline"
+                                          onClick={() => {
+                                            setSelectedDepartmentId(dept._id);
+                                            router.push(`/dashboard/department/${dept._id}`);
+                                          }}
+                                        >
+                                          {dept.name}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-5 whitespace-nowrap">
-                                  <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 uppercase">
-                                    {dept.departmentId}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-5">
-                                  <p className="text-sm text-gray-500 truncate max-w-xs">{dept.description || 'No description provided'}</p>
-                                </td>
-                                <td className="px-6 py-5 whitespace-nowrap">
-                                  <span className="px-2.5 py-0.5 inline-flex items-center text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 ring-1 ring-emerald-200 shadow-sm">
-                                    Active
-                                  </span>
-                                </td>
-                                <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                                  <div className="flex justify-end items-center space-x-2">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                      onClick={() => {
-                                        setEditingDepartment(dept);
-                                        setShowDepartmentDialog(true);
-                                      }}
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                      onClick={() => {
-                                        setConfirmDialog({
-                                          isOpen: true,
-                                          title: 'Delete Department',
-                                          message: `Are you sure you want to delete "${dept.name}"? This action cannot be undone and will delete all associated users, grievances, and appointments.`,
-                                          onConfirm: async () => {
-                                            try {
-                                              const response = await departmentAPI.delete(dept._id);
-                                              if (response.success) {
-                                                toast.success('Department deleted successfully');
-                                                fetchDepartments();
+                                  </td>
+                                  <td className="px-6 py-5 whitespace-nowrap">
+                                    <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 uppercase">
+                                      {dept.departmentId}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-5">
+                                    <p className="text-sm text-gray-500 truncate max-w-xs">{dept.description || 'No description provided'}</p>
+                                  </td>
+                                  <td className="px-6 py-5 whitespace-nowrap">
+                                    <span className="px-2.5 py-0.5 inline-flex items-center text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 ring-1 ring-emerald-200 shadow-sm">
+                                      Active
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                                    <div className="flex justify-end items-center space-x-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                        onClick={() => {
+                                          setEditingDepartment(dept);
+                                          setShowDepartmentDialog(true);
+                                        }}
+                                      >
+                                        <Edit2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                        onClick={() => {
+                                          setConfirmDialog({
+                                            isOpen: true,
+                                            title: 'Delete Department',
+                                            message: `Are you sure you want to delete "${dept.name}"? This action cannot be undone and will delete all associated users, grievances, and appointments.`,
+                                            onConfirm: async () => {
+                                              try {
+                                                const response = await departmentAPI.delete(dept._id);
+                                                if (response.success) {
+                                                  toast.success('Department deleted successfully');
+                                                  fetchDepartments();
+                                                }
+                                              } catch (error: any) {
+                                                toast.error(error.message || 'Failed to delete department');
+                                              } finally {
+                                                setConfirmDialog(p => ({ ...p, isOpen: false }));
                                               }
-                                            } catch (error: any) {
-                                              toast.error(error.message || 'Failed to delete department');
-                                            } finally {
-                                              setConfirmDialog(p => ({ ...p, isOpen: false }));
-                                            }
-                                          },
-                                          variant: 'danger'
-                                        } as any);
-                                      }}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                            },
+                                            variant: 'danger'
+                                          } as any);
+                                        }}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           )}
 
@@ -2211,6 +2276,8 @@ export default function Dashboard() {
                 ? selectedGrievanceForAssignment.departmentId._id 
                 : selectedGrievanceForAssignment.departmentId
             }
+            userRole={user.role}
+            userDepartmentId={typeof user.departmentId === 'object' && user.departmentId !== null ? user.departmentId._id : user.departmentId}
           />
         )}
 
@@ -2235,6 +2302,8 @@ export default function Dashboard() {
                 ? selectedAppointmentForAssignment.departmentId._id 
                 : selectedAppointmentForAssignment.departmentId
             }
+            userRole={user.role}
+            userDepartmentId={typeof user.departmentId === 'object' && user.departmentId !== null ? user.departmentId._id : user.departmentId}
           />
         )}
 

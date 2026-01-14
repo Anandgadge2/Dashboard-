@@ -15,6 +15,8 @@ interface AssignmentDialogProps {
   companyId: string;
   currentAssignee?: string | { _id: string; firstName: string; lastName: string };
   currentDepartmentId?: string;
+  userRole?: string;
+  userDepartmentId?: string;
 }
 
 export default function AssignmentDialog({
@@ -25,7 +27,9 @@ export default function AssignmentDialog({
   itemId,
   companyId,
   currentAssignee,
-  currentDepartmentId
+  currentDepartmentId,
+  userRole,
+  userDepartmentId
 }: AssignmentDialogProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -60,7 +64,12 @@ export default function AssignmentDialog({
     try {
       const deptRes = await departmentAPI.getAll({ companyId });
       if (deptRes.success) {
-        setDepartments(deptRes.data.departments);
+        // Filter departments for department admins
+        let depts = deptRes.data.departments;
+        if (userRole === 'DEPARTMENT_ADMIN' && userDepartmentId) {
+          depts = depts.filter(d => d._id === userDepartmentId);
+        }
+        setDepartments(depts);
       }
     } catch (error) {
       toast.error('Failed to load departments');
@@ -183,6 +192,7 @@ export default function AssignmentDialog({
               onChange={(e) => setSelectedDepartment(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               required
+              disabled={userRole === 'DEPARTMENT_ADMIN'}
             >
               <option value="" disabled>Select Department</option>
               {departments.map((dept) => (
