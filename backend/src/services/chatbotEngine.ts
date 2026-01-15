@@ -414,16 +414,20 @@ export async function processWhatsAppMessage(message: ChatbotMessage): Promise<a
  
   console.log('🔄 Processing message:', { from, step: session.step, input: userInput, type: messageType });
 
-  // Initial greeting - auto-trigger on any message if session is at start
+  // Handle global reset on greetings (like "Hi", "Hello", "Start")
+  const greetings = ['hi', 'hello', 'start', 'namaste', 'नमस्ते', 'restart', 'menu'];
+  if (!buttonId && greetings.includes(userInput)) {
+    console.log('🔄 Global reset triggered by greeting:', userInput);
+    await clearSession(from, companyId);
+    const newSession = getSession(from, companyId);
+    await showLanguageSelection(newSession, message, company);
+    return;
+  }
+
+  // Initial greeting/auto-start if session is new
   if (session.step === 'start') {
-    if (userInput === 'hi' || userInput === 'hello' || userInput === 'start' || userInput === 'namaste' || userInput === 'नमस्ते') {
-      await showLanguageSelection(session, message, company);
-      return;
-    } else {
-      // Auto-start on any message
-      await showLanguageSelection(session, message, company);
-      return;
-    }
+    await showLanguageSelection(session, message, company);
+    return;
   }
 
   // Language selection
@@ -487,13 +491,22 @@ export async function processWhatsAppMessage(message: ChatbotMessage): Promise<a
     return;
   }
   
-  // Handle "Back to Main Menu" button
-  if (session.step === 'awaiting_menu' || buttonId === 'menu_back') {
+  // Handle "Back to Main Menu" button - only if explicitly clicked
+  if (buttonId === 'menu_back') {
     console.log('↩️ User clicked Back to Main Menu');
     await clearSession(message.from, company._id.toString());
     const newSession = getSession(message.from, company._id.toString());
     newSession.language = session.language || 'en';
     await showMainMenu(newSession, message, company);
+    return;
+  }
+  
+  // If in awaiting_menu state, process the menu selection
+  if (session.step === 'awaiting_menu') {
+    console.log('📋 Processing menu selection from awaiting_menu state');
+    session.step = 'main_menu';
+    await updateSession(session);
+    await handleMainMenuSelection(session, message, company, buttonId || userInput);
     return;
   }
 
