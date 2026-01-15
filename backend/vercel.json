@@ -2,21 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/index.ts",
+      "src": "src/server.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "src/index.ts"
+      "dest": "src/server.ts"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "src/index.ts": {
+    "src/server.ts": {
       "memory": 1024,
       "maxDuration": 30
     }
