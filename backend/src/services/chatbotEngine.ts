@@ -696,8 +696,8 @@ async function continueGrievanceFlow(
       console.log('🏬 All departments:', departments.map(d => ({ name: d.name, id: d._id })));
       
       if (departments.length > 0) {
-        // Build department list
-        const deptRows = departments.map(dept => {
+        // WhatsApp allows max 10 rows per section, so split if needed
+        const deptRows = departments.slice(0, 10).map(dept => {
           // Try to translate department name
           const translatedName = getTranslation(`dept_${dept.name}`, session.language);
           const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
@@ -705,27 +705,50 @@ async function continueGrievanceFlow(
           return {
             id: `grv_dept_${dept._id}`,
             title: displayName.length > 24 ? displayName.substring(0, 21) + '...' : displayName,
-            description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || 'Select this department'
+            description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || ''
           };
         });
         
+        // Create sections (WhatsApp requires at least 1 section with 1-10 rows)
         const sections = [{
           title: getTranslation('btn_select_dept', session.language),
           rows: deptRows
         }];
         
-        await sendWhatsAppList(
-          company,
-          message.from,
-          getTranslation('selection_department', session.language),
-          getTranslation('btn_select_dept', session.language),
-          sections
-        );
+        console.log('📋 Sending department list with', deptRows.length, 'departments');
+        
+        try {
+          await sendWhatsAppList(
+            company,
+            message.from,
+            getTranslation('selection_department', session.language),
+            getTranslation('btn_select_dept', session.language),
+            sections
+          );
+        } catch (error) {
+          console.error('❌ Failed to send list, falling back to buttons');
+          // If list fails, use buttons for first 3 departments
+          if (departments.length <= 3) {
+            await sendWhatsAppButtons(
+              company,
+              message.from,
+              getTranslation('selection_department', session.language),
+              departments.map(dept => {
+                const translatedName = getTranslation(`dept_${dept.name}`, session.language);
+                const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
+                return {
+                  id: `grv_dept_${dept._id}`,
+                  title: displayName.substring(0, 20)
+                };
+              })
+            );
+          }
+        }
       } else {
         await sendWhatsAppMessage(
           company,
           message.from,
-          getTranslation('selection_department', session.language)
+          getTranslation('msg_no_dept', session.language)
         );
       }
       
@@ -960,9 +983,41 @@ async function createGrievanceWithDepartment(
       category: session.data.category
     });
     
-    // Manually generate grievanceId (pre-save hook not firing reliably)
-    const grievanceCount = await Grievance.countDocuments({ companyId: company._id });
-    const grievanceId = `GRV${String(grievanceCount + 1).padStart(8, '0')}`;
+    
+    // Generate unique grievanceId by finding the highest existing ID
+    let grievanceId = '';
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (attempts < maxAttempts) {
+      // Find the last grievance ID for this company
+      const lastGrievance = await Grievance.findOne({ companyId: company._id })
+        .sort({ grievanceId: -1 })
+        .select('grievanceId');
+      
+      let nextNumber = 1;
+      if (lastGrievance && lastGrievance.grievanceId) {
+        const match = lastGrievance.grievanceId.match(/^GRV(\d+)$/);
+        if (match) {
+          nextNumber = parseInt(match[1], 10) + 1;
+        }
+      }
+      
+      grievanceId = `GRV${String(nextNumber).padStart(8, '0')}`;
+      
+      // Check if this ID already exists
+      const existing = await Grievance.findOne({ grievanceId });
+      if (!existing) {
+        break; // ID is unique, we can use it
+      }
+      
+      console.log(`⚠️ Grievance ID ${grievanceId} already exists, trying next...`);
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      throw new Error('Failed to generate unique grievance ID after multiple attempts');
+    }
     
     console.log('🆔 Generated grievanceId:', grievanceId);
     
@@ -1006,7 +1061,8 @@ async function createGrievanceWithDepartment(
     const successMessage = getTranslation('grievanceSuccess', session.language)
       .replace('{id}', grievance.grievanceId)
       .replace('{category}', getTranslation(`dept_${session.data.category}`, session.language) !== `dept_${session.data.category}` ? getTranslation(`dept_${session.data.category}`, session.language) : session.data.category)
-      .replace('{department}', deptName);
+      .replace('{department}', deptName)
+      .replace('{date}', new Date().toLocaleDateString('en-IN'));
 
     await sendWhatsAppMessage(company, message.from, successMessage);
 
@@ -1330,9 +1386,41 @@ async function createAppointment(
     const appointmentDate = new Date(session.data.appointmentDate);
     const appointmentTime = session.data.appointmentTime;
     
-    // Manually generate appointmentId (pre-save hook not firing reliably)
-    const appointmentCount = await Appointment.countDocuments({ companyId: company._id });
-    const appointmentId = `APT${String(appointmentCount + 1).padStart(8, '0')}`;
+    
+    // Generate unique appointmentId by finding the highest existing ID
+    let appointmentId = '';
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (attempts < maxAttempts) {
+      // Find the last appointment ID for this company
+      const lastAppointment = await Appointment.findOne({ companyId: company._id })
+        .sort({ appointmentId: -1 })
+        .select('appointmentId');
+      
+      let nextNumber = 1;
+      if (lastAppointment && lastAppointment.appointmentId) {
+        const match = lastAppointment.appointmentId.match(/^APT(\d+)$/);
+        if (match) {
+          nextNumber = parseInt(match[1], 10) + 1;
+        }
+      }
+      
+      appointmentId = `APT${String(nextNumber).padStart(8, '0')}`;
+      
+      // Check if this ID already exists
+      const existing = await Appointment.findOne({ appointmentId });
+      if (!existing) {
+        break; // ID is unique, we can use it
+      }
+      
+      console.log(`⚠️ Appointment ID ${appointmentId} already exists, trying next...`);
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      throw new Error('Failed to generate unique appointment ID after multiple attempts');
+    }
     
     console.log('🆔 Generated appointmentId:', appointmentId);
     

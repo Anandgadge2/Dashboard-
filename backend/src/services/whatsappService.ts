@@ -229,6 +229,16 @@ export async function sendWhatsAppList(
   try {
     const { url, headers } = getWhatsAppConfig(company);
 
+    // Validate sections (WhatsApp requires 1-10 rows per section, max 10 sections)
+    const validatedSections = sections.map(section => ({
+      title: section.title.substring(0, 24), // Max 24 chars for section title
+      rows: section.rows.slice(0, 10).map(row => ({
+        id: row.id.substring(0, 200), // Max 200 chars for ID
+        title: row.title.substring(0, 24), // Max 24 chars for title
+        description: row.description ? row.description.substring(0, 72) : undefined // Max 72 chars for description
+      }))
+    })).slice(0, 10); // Max 10 sections
+
     const payload = {
       messaging_product: 'whatsapp',
       to,
@@ -236,14 +246,20 @@ export async function sendWhatsAppList(
       interactive: {
         type: 'list',
         body: {
-          text: safeText(message)
+          text: safeText(message, 1024) // Max 1024 chars for body
         },
         action: {
-          button: buttonText,
-          sections
+          button: buttonText.substring(0, 20), // Max 20 chars for button text
+          sections: validatedSections
         }
       }
     };
+
+    console.log('📋 Sending WhatsApp list:', {
+      to,
+      sectionsCount: validatedSections.length,
+      totalRows: validatedSections.reduce((sum, s) => sum + s.rows.length, 0)
+    });
 
     const response = await axios.post(url, payload, { headers });
 
@@ -254,6 +270,11 @@ export async function sendWhatsAppList(
     };
 
   } catch (error: any) {
+    console.error('❌ WhatsApp list error:', {
+      message: error?.response?.data?.error?.message,
+      code: error?.response?.data?.error?.code
+    });
+    
     logMetaError(error, {
       action: 'send_list',
       to,
