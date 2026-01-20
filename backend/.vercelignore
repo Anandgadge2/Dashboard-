@@ -14,11 +14,9 @@ yarn-error.log*
 *~
 coverage
 .nyc_output
-dist
 src/scripts
 *.test.ts
 *.spec.ts
 __tests__
 .git
 .gitignore
-README.md
