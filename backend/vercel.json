@@ -3,7 +3,6 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install --include=dev",
   "framework": null,
-  "outputDirectory": null,
   "rewrites": [
     {
       "source": "/(.*)",
