@@ -23,8 +23,7 @@
     "test:email": "node test-email-direct.js",
     "test:notifications": "node test-notifications.js",
     "test:api": "bash test-api.sh",
-    "test:chatbot": "node test-chatbot-comprehensive.js",
-    "check:deployment": "node ../check-deployment.js"
+    "test:chatbot": "node test-chatbot-comprehensive.js"
   },
   "keywords": [
     "whatsapp",

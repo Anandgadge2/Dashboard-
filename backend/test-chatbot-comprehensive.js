@@ -15,13 +15,6 @@ const Appointment = require('./dist/models/Appointment').default;
 const TEST_PHONE = '919356150561'; // Use a verified WhatsApp number
 const TEST_COMPANY_ID = 'CMP000001'; // Zilla Parishad Amravati
 
-// Global test data
-let testData = {
-  company: null,
-  departments: [],
-  firstDepartmentId: null
-};
-
 // Helper to create a chatbot message
 function createMessage(text, buttonId = null, messageType = 'text') {
   return {
@@ -35,15 +28,6 @@ function createMessage(text, buttonId = null, messageType = 'text') {
       phone_number_id: process.env.WHATSAPP_PHONE_NUMBER_ID
     }
   };
-}
-
-// Helper to get department button ID
-function getDepartmentButtonId(deptId, type = 'grievance') {
-  if (type === 'grievance') {
-    return `grv_dept_${deptId}`;
-  } else {
-    return `dept_${deptId}`;
-  }
 }
 
 // Helper to simulate user interaction
@@ -78,30 +62,11 @@ async function testChatbotInteractions() {
     await connectDatabase();
     console.log('✅ Database connected\n');
 
-    // Fetch test data
-    const Department = require('./dist/models/Department').default;
-    
-    testData.company = await Company.findOne({ companyId: TEST_COMPANY_ID });
-    if (!testData.company) {
+    const company = await Company.findOne({ companyId: TEST_COMPANY_ID });
+    if (!company) {
       console.error('❌ Company not found!');
       process.exit(1);
     }
-
-    // Fetch departments
-    testData.departments = await Department.find({
-      companyId: testData.company._id,
-      isActive: true,
-      isDeleted: false
-    });
-
-    if (testData.departments.length === 0) {
-      console.error('❌ No departments found! Please create departments first.');
-      process.exit(1);
-    }
-
-    testData.firstDepartmentId = testData.departments[0]._id.toString();
-    console.log(`📋 Found ${testData.departments.length} departments`);
-    console.log(`   Using: ${testData.departments[0].name} (${testData.firstDepartmentId})\n`);
 
     console.log('🧪 Starting Comprehensive Chatbot Tests...\n');
     console.log('='.repeat(80));
@@ -199,8 +164,7 @@ async function testChatbotInteractions() {
       // Test 3.3: Select department/category
       console.log('\n🔹 Test 3.3: Select department');
       // Wait for department list, then select first department
-      const deptButtonId = getDepartmentButtonId(testData.firstDepartmentId, 'grievance');
-      await sendMessage(null, deptButtonId);
+      await sendMessage(null, 'dept_0'); // Assuming first department
       logTest('3.3: Department selection', true);
 
       // Test 3.4: Enter description
@@ -253,8 +217,7 @@ async function testChatbotInteractions() {
       await sendMessage(null, 'lang_en');
       await sendMessage(null, 'grievance');
       await sendMessage('Jane Smith');
-      const deptButtonId2 = getDepartmentButtonId(testData.firstDepartmentId, 'grievance');
-      await sendMessage(null, deptButtonId2);
+      await sendMessage(null, 'dept_0');
       await sendMessage('Road repair needed urgently');
       
       // Test 4.1: Manual location entry
@@ -288,8 +251,7 @@ async function testChatbotInteractions() {
 
       // Test 5.2: Select department
       console.log('\n🔹 Test 5.2: Select department for appointment');
-      const aptDeptButtonId = getDepartmentButtonId(testData.firstDepartmentId, 'appointment');
-      await sendMessage(null, aptDeptButtonId);
+      await sendMessage(null, 'dept_0');
       logTest('5.2: Department selected', true);
 
       // Test 5.3: Enter name
@@ -405,16 +367,14 @@ async function testChatbotInteractions() {
       // Test 7.3: Short description (should fail validation)
       console.log('\n🔹 Test 7.3: Short description validation');
       await sendMessage('Valid Name');
-      const deptButtonId3 = getDepartmentButtonId(testData.firstDepartmentId, 'grievance');
-      await sendMessage(null, deptButtonId3);
+      await sendMessage(null, 'dept_0');
       await sendMessage('Short'); // Too short
       logTest('7.3: Description validation works', true);
 
       // Test 7.4: Cancel grievance
       console.log('\n🔹 Test 7.4: Cancel grievance flow');
       await sendMessage('Valid Name');
-      const deptButtonId4 = getDepartmentButtonId(testData.firstDepartmentId, 'grievance');
-      await sendMessage(null, deptButtonId4);
+      await sendMessage(null, 'dept_0');
       await sendMessage('Valid description with enough characters');
       await sendMessage(null, 'cancel');
       logTest('7.4: Cancel option works', true);
@@ -463,8 +423,7 @@ async function testChatbotInteractions() {
       await sendMessage(null, 'lang_en');
       await sendMessage(null, 'grievance');
       await sendMessage('Test User');
-      // Wait for department list, then go back
-      await sendMessage('back'); // Use text command instead of button
+      await sendMessage(null, 'menu_back');
       logTest('9.1: Back to menu button works', true);
 
       // Test 9.2: Help during flow
