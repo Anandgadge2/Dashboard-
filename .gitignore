@@ -51,31 +51,7 @@ dump.rdb
 # Uploads
 uploads/
 
-# Test scripts
-test-*.js
-test-*.sh
-*-test.js
-*-test.sh
-check-deployment.js
-
-# Deployment scripts
-deploy.sh
-
 # Seed scripts (contain sensitive data)
-backend/src/scripts/
-**/scripts/seed*.ts
-**/scripts/fix*.ts
-**/scripts/migrate*.ts
-**/scripts/generate*.ts
-**/scripts/test*.ts
-
-# Test guides and documentation
-**/TESTING_GUIDE.md
-**/QUICK_TEST.md
-**/CHATBOT_TEST_GUIDE.md
-**/DEPLOYMENT_GUIDE.md
-**/QUICK_DEPLOY.md
-**/README_DEPLOYMENT.md
-
-# Generated test files
-generate-sso-token.js
+# backend/src/scripts/
+# **/scripts/seed*.ts
+# **/scripts/fix*.ts
