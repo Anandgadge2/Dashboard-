@@ -44,31 +44,105 @@ export async function sendEmail(
   text?: string
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    // Check SMTP configuration
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      logger.warn('SMTP credentials not configured. Email not sent.');
-      return { success: false, error: 'SMTP not configured' };
+      const errorMsg = 'SMTP credentials not configured. Please set SMTP_USER and SMTP_PASS environment variables.';
+      logger.warn(`⚠️ ${errorMsg}`);
+      return { success: false, error: errorMsg };
+    }
+
+    // Validate email address
+    const recipients = Array.isArray(to) ? to : [to];
+    const invalidEmails = recipients.filter(email => !email || !email.includes('@'));
+    if (invalidEmails.length > 0) {
+      const errorMsg = `Invalid email address(es): ${invalidEmails.join(', ')}`;
+      logger.error(`❌ ${errorMsg}`);
+      return { success: false, error: errorMsg };
     }
 
     const transport = createTransporter();
 
     const mailOptions: SendMailOptions = {
       from: `"${process.env.SMTP_FROM_NAME || 'Zilla Parishad Amravati'}" <${process.env.SMTP_USER}>`,
-      to: Array.isArray(to) ? to.join(', ') : to,
+      to: recipients.join(', '),
       subject,
       text: text ?? subject,
       html
     };
 
+    logger.info(`📧 Attempting to send email to: ${recipients.join(', ')}`);
     const info = await transport.sendMail(mailOptions);
-    logger.info(`✅ Email sent: ${info.messageId}`);
+    logger.info(`✅ Email sent successfully to ${recipients.join(', ')} - Message ID: ${info.messageId}`);
 
     return { success: true };
-  } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : 'Unknown email error';
+  } catch (err: any) {
+    let errorMessage = 'Unknown email error';
+    
+    if (err instanceof Error) {
+      errorMessage = err.message;
+      
+      // Provide more helpful error messages
+      if (err.message.includes('Invalid login')) {
+        errorMessage = 'Invalid SMTP credentials. Please check SMTP_USER and SMTP_PASS.';
+      } else if (err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEDOUT')) {
+        errorMessage = `Cannot connect to SMTP server (${process.env.SMTP_HOST || 'smtp.gmail.com'}:${process.env.SMTP_PORT || 465}). Check network and SMTP settings.`;
+      } else if (err.message.includes('self signed certificate')) {
+        errorMessage = 'SMTP server certificate validation failed. Check TLS settings.';
+      }
+    }
 
-    logger.error('❌ Failed to send email:', err);
+    logger.error(`❌ Failed to send email to ${Array.isArray(to) ? to.join(', ') : to}:`, {
+      error: errorMessage,
+      details: err
+    });
+    
     return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Test email configuration
+ */
+export async function testEmailConfiguration(): Promise<{ success: boolean; error?: string; details?: any }> {
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return {
+        success: false,
+        error: 'SMTP credentials not configured',
+        details: {
+          SMTP_USER: process.env.SMTP_USER ? 'Set' : 'Missing',
+          SMTP_PASS: process.env.SMTP_PASS ? 'Set' : 'Missing',
+          SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com (default)',
+          SMTP_PORT: process.env.SMTP_PORT || '465 (default)'
+        }
+      };
+    }
+
+    const transport = createTransporter();
+    
+    // Test connection by verifying credentials
+    await transport.verify();
+    
+    return {
+      success: true,
+      details: {
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT || '465',
+        user: process.env.SMTP_USER,
+        fromName: process.env.SMTP_FROM_NAME || 'Zilla Parishad Amravati'
+      }
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+      details: {
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT || '465',
+        user: process.env.SMTP_USER,
+        error: err
+      }
+    };
   }
 }
 

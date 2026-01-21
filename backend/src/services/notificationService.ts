@@ -466,8 +466,19 @@ export async function notifyDepartmentAdminOnCreation(
 
     // Email
     if (admin.email) {
-      const email = generateNotificationEmail(data.type, 'created', notificationData);
-      await sendEmail(admin.email, email.subject, email.html, email.text);
+      try {
+        const email = generateNotificationEmail(data.type, 'created', notificationData);
+        const result = await sendEmail(admin.email, email.subject, email.html, email.text);
+        if (result.success) {
+          logger.info(`✅ Email sent to department admin ${admin.getFullName()} (${admin.email})`);
+        } else {
+          logger.error(`❌ Failed to send email to ${admin.email}:`, result.error);
+        }
+      } catch (error) {
+        logger.error(`❌ Error sending email to ${admin.email}:`, error);
+      }
+    } else {
+      logger.warn(`⚠️ Department admin ${admin.getFullName()} has no email address`);
     }
 
     // WhatsApp
@@ -518,8 +529,19 @@ export async function notifyUserOnAssignment(
     };
 
     if (user.email) {
-      const email = generateNotificationEmail(data.type, 'assigned', emailData);
-      await sendEmail(user.email, email.subject, email.html, email.text);
+      try {
+        const email = generateNotificationEmail(data.type, 'assigned', emailData);
+        const result = await sendEmail(user.email, email.subject, email.html, email.text);
+        if (result.success) {
+          logger.info(`✅ Email sent to assigned user ${user.getFullName()} (${user.email})`);
+        } else {
+          logger.error(`❌ Failed to send email to ${user.email}:`, result.error);
+        }
+      } catch (error) {
+        logger.error(`❌ Error sending email to ${user.email}:`, error);
+      }
+    } else {
+      logger.warn(`⚠️ Assigned user ${user.getFullName()} has no email address`);
     }
 
     const message =
@@ -602,17 +624,26 @@ export async function notifyHierarchyOnStatusChange(
       await safeSendWhatsApp(company, user.phone, message);
 
       if (user.email) {
-        const email = generateNotificationEmail(data.type, 'resolved', {
-          companyName: company.name,
-          recipientName: user.getFullName(),
-          grievanceId: data.grievanceId || data.appointmentId,
-          citizenName: data.citizenName,
-          citizenPhone: data.citizenPhone,
-          departmentName: departmentName,
-          remarks: data.remarks
-        });
+        try {
+          const email = generateNotificationEmail(data.type, 'resolved', {
+            companyName: company.name,
+            recipientName: user.getFullName(),
+            grievanceId: data.grievanceId || data.appointmentId,
+            citizenName: data.citizenName,
+            citizenPhone: data.citizenPhone,
+            departmentName: departmentName,
+            remarks: data.remarks
+          });
 
-        await sendEmail(user.email, email.subject, email.html, email.text);
+          const result = await sendEmail(user.email, email.subject, email.html, email.text);
+          if (result.success) {
+            logger.info(`✅ Email sent to ${user.getFullName()} (${user.email})`);
+          } else {
+            logger.error(`❌ Failed to send email to ${user.email}:`, result.error);
+          }
+        } catch (error) {
+          logger.error(`❌ Error sending email to ${user.email}:`, error);
+        }
       }
     }
 
