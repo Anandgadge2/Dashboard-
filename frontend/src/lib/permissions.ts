@@ -109,7 +109,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.READ_GRIEVANCE,
     Permission.UPDATE_GRIEVANCE,
     Permission.READ_APPOINTMENT,
-    Permission.UPDATE_APPOINTMENT
+    Permission.UPDATE_APPOINTMENT,
+    Permission.VIEW_ANALYTICS, // For viewing dashboard statistics
+    Permission.READ_DEPARTMENT, // For viewing department information
+    Permission.READ_USER // For viewing users in their department
   ],
   
   [UserRole.ANALYTICS_VIEWER]: [

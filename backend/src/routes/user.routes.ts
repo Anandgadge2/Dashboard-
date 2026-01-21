@@ -34,6 +34,21 @@ router.get('/', requirePermission(Permission.READ_USER), async (req: Request, re
     } else if (currentUser.role === UserRole.DEPARTMENT_ADMIN) {
       // DepartmentAdmin can only see users in their department
       query.departmentId = currentUser.departmentId;
+    } else if (currentUser.role === UserRole.OPERATOR) {
+      // Operators can only see users in their department
+      if (currentUser.departmentId) {
+        query.departmentId = currentUser.departmentId;
+      } else {
+        // If operator has no department, return empty
+        res.json({
+          success: true,
+          data: {
+            users: [],
+            pagination: { page: 1, limit: 20, total: 0, pages: 0 }
+          }
+        });
+        return;
+      }
     } else {
       // Other roles cannot list users
       res.status(403).json({

@@ -162,7 +162,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.READ_GRIEVANCE,
     Permission.STATUS_CHANGE_GRIEVANCE, // Only status and comments, not full update
     Permission.READ_APPOINTMENT,
-    Permission.STATUS_CHANGE_APPOINTMENT // Only status and comments, not full update
+    Permission.STATUS_CHANGE_APPOINTMENT, // Only status and comments, not full update
+    Permission.VIEW_ANALYTICS, // For viewing dashboard statistics
+    Permission.READ_DEPARTMENT, // For viewing department information
+    Permission.READ_USER // For viewing users in their department
   ],
   
   [UserRole.ANALYTICS_VIEWER]: [

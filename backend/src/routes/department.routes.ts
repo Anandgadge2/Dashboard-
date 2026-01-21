@@ -23,12 +23,26 @@ router.get('/', requirePermission(Permission.READ_DEPARTMENT), async (req: Reque
     const query: any = {};
 
     // SuperAdmin can see all departments
-    if (user.role !== UserRole.SUPER_ADMIN) {
+    if (user.role === UserRole.SUPER_ADMIN) {
+      if (companyId) query.companyId = companyId;
+    } else if (user.role === UserRole.OPERATOR) {
+      // Operators can only see their own department
+      if (user.departmentId) {
+        query._id = user.departmentId;
+      } else {
+        // If operator has no department, return empty
+        res.json({
+          success: true,
+          data: {
+            departments: [],
+            pagination: { page: 1, limit: 20, total: 0, pages: 0 }
+          }
+        });
+        return;
+      }
+    } else {
       // Other roles can only see their company's departments
       query.companyId = user.companyId;
-    } else if (companyId) {
-      // SuperAdmin can filter by company
-      query.companyId = companyId;
     }
 
     if (search) {
