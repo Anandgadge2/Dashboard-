@@ -21,6 +21,7 @@
     "seed:users": "ts-node src/scripts/seedUsers.ts",
     "generate:sso-token": "ts-node src/scripts/generateSSOToken.ts",
     "test:email": "node test-email-direct.js",
+    "test:email:assignment": "node test-email-assignment-status.js",
     "test:notifications": "node test-notifications.js",
     "test:api": "bash test-api.sh",
     "test:chatbot": "node test-chatbot-comprehensive.js"

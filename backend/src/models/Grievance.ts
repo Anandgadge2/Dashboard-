@@ -212,24 +212,31 @@ GrievanceSchema.index({ departmentId: 1, status: 1, isDeleted: 1 });
 GrievanceSchema.index({ assignedTo: 1, status: 1, isDeleted: 1 });
 GrievanceSchema.index({ createdAt: -1 });
 
-// Pre-save hook to generate grievanceId
+// Pre-save hook to generate grievanceId (using atomic counter if not provided)
 GrievanceSchema.pre('save', async function (next) {
   if (this.isNew && !this.grievanceId) {
-    // Find the last grievanceId globally, including soft-deleted ones
-    const lastGrievance = await mongoose.model('Grievance')
-      .findOne({}, { grievanceId: 1 })
-      .sort({ grievanceId: -1 })
-      .setOptions({ includeDeleted: true });
+    try {
+      // Use atomic counter for ID generation (prevents race conditions)
+      const { getNextGrievanceId } = await import('../utils/idGenerator');
+      this.grievanceId = await getNextGrievanceId();
+    } catch (error) {
+      console.error('❌ Error generating grievance ID:', error);
+      // Fallback to old method if counter fails
+      const lastGrievance = await mongoose.model('Grievance')
+        .findOne({}, { grievanceId: 1 })
+        .sort({ grievanceId: -1 })
+        .setOptions({ includeDeleted: true });
 
-    let nextNum = 1;
-    if (lastGrievance && lastGrievance.grievanceId) {
-      const match = lastGrievance.grievanceId.match(/^GRV(\d+)$/);
-      if (match) {
-        nextNum = parseInt(match[1], 10) + 1;
+      let nextNum = 1;
+      if (lastGrievance && lastGrievance.grievanceId) {
+        const match = lastGrievance.grievanceId.match(/^GRV(\d+)$/);
+        if (match) {
+          nextNum = parseInt(match[1], 10) + 1;
+        }
       }
+      
+      this.grievanceId = `GRV${String(nextNum).padStart(8, '0')}`;
     }
-    
-    this.grievanceId = `GRV${String(nextNum).padStart(8, '0')}`;
     
     // Initialize status history
     this.statusHistory = [{

@@ -10,6 +10,8 @@ import { sendWhatsAppMessage, sendWhatsAppButtons, sendWhatsAppList } from './wh
 import { findDepartmentByCategory, getAvailableCategories } from './departmentMapper';
 import { notifyDepartmentAdminOnCreation } from './notificationService';
 import { uploadWhatsAppMediaToCloudinary } from './mediaService';
+import { getSession, updateSession, clearSession, UserSession } from './sessionService';
+import { getNextGrievanceId, getNextAppointmentId } from '../utils/idGenerator';
 
 export interface ChatbotMessage {
   companyId: string;
@@ -22,17 +24,7 @@ export interface ChatbotMessage {
   buttonId?: string;
 }
 
-interface UserSession {
-  companyId: string;
-  phoneNumber: string;
-  language: 'en' | 'hi' | 'mr';
-  step: string;
-  data: Record<string, any>;
-  pendingAction?: string;
-  lastActivity: Date;
-}
-
-const userSessions: Map<string, UserSession> = new Map();
+// UserSession interface is now imported from sessionService
 
 // Professional Government Language Translations
 const translations = {
@@ -419,43 +411,7 @@ export function getTranslation(key: string, language: 'en' | 'hi' | 'mr' = 'en')
   return langData?.[key] || enData[key] || key;
 }
 
-// Helper to get or create session
-function getSession(phoneNumber: string, companyId: string): UserSession {
-  const sessionKey = `${phoneNumber}_${companyId}`;
-  let session = userSessions.get(sessionKey);
-  
-  if (!session) {
-    session = {
-      companyId,
-      phoneNumber,
-      language: 'en',
-      step: 'start',
-      data: {},
-      lastActivity: new Date()
-    };
-    userSessions.set(sessionKey, session);
-  }
-  
-  // Check if session expired (30 minutes of inactivity)
-  const inactivityTime = Date.now() - session.lastActivity.getTime();
-  if (inactivityTime > 30 * 60 * 1000) {
-    userSessions.delete(sessionKey);
-    return getSession(phoneNumber, companyId); // Create new session
-  }
-  
-  session.lastActivity = new Date();
-  return session;
-}
-
-async function updateSession(session: UserSession) {
-  const sessionKey = `${session.phoneNumber}_${session.companyId}`;
-  userSessions.set(sessionKey, session);
-}
-
-async function clearSession(phoneNumber: string, companyId: string) {
-  const sessionKey = `${phoneNumber}_${companyId}`;
-  userSessions.delete(sessionKey);
-}
+// Session management functions are now imported from sessionService
 
 // Main message processor with voice note support
 export async function processWhatsAppMessage(message: ChatbotMessage): Promise<any> {
@@ -629,6 +585,23 @@ export async function processWhatsAppMessage(message: ChatbotMessage): Promise<a
     session.step = 'main_menu';
     await updateSession(session);
     await handleMainMenuSelection(session, message, company, buttonId || userInput);
+    return;
+  }
+
+  // Handle unrecognized text messages with helpful response
+  if (messageType === 'text' && messageText && !buttonId) {
+    const unrecognizedResponses = {
+      en: '⚠️ *Unrecognized Input*\n\nI didn\'t understand that. Please use the buttons provided or type one of these commands:\n\n• "Hi" or "Hello" - Start over\n• "Menu" - Show main menu\n• "Help" - Get assistance\n• "Track" - Track status\n\nOr select an option from the buttons above.',
+      hi: '⚠️ *अमान्य इनपुट*\n\nमैं इसे समझ नहीं पाया। कृपया प्रदान किए गए बटन का उपयोग करें या इनमें से कोई एक कमांड टाइप करें:\n\n• "Hi" या "Hello" - फिर से शुरू करें\n• "Menu" - मुख्य मेनू दिखाएं\n• "Help" - सहायता प्राप्त करें\n• "Track" - स्थिति ट्रैक करें\n\nया ऊपर दिए गए बटन से एक विकल्प चुनें।',
+      mr: '⚠️ *अमान्य इनपुट*\n\nमला ते समजले नाही. कृपया प्रदान केलेले बटण वापरा किंवा यापैकी एक आदेश टाइप करा:\n\n• "Hi" किंवा "Hello" - पुन्हा सुरू करा\n• "Menu" - मुख्य मेनू दाखवा\n• "Help" - मदत मिळवा\n• "Track" - स्थिती ट्रॅक करा\n\nकिंवा वर दिलेल्या बटणातून एक पर्याय निवडा.'
+    };
+
+    await sendWhatsAppMessage(
+      company,
+      from,
+      unrecognizedResponses[session.language] || unrecognizedResponses.en
+    );
+    await showMainMenu(session, message, company);
     return;
   }
 
@@ -1088,41 +1061,9 @@ async function createGrievanceWithDepartment(
     
     
     // Generate unique grievanceId by finding the highest existing ID
-    let grievanceId = '';
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (attempts < maxAttempts) {
-      // Find the last grievance ID for this company
-      const lastGrievance = await Grievance.findOne({ companyId: company._id })
-        .sort({ grievanceId: -1 })
-        .select('grievanceId');
-      
-      let nextNumber = 1;
-      if (lastGrievance && lastGrievance.grievanceId) {
-        const match = lastGrievance.grievanceId.match(/^GRV(\d+)$/);
-        if (match) {
-          nextNumber = parseInt(match[1], 10) + 1;
-        }
-      }
-      
-      grievanceId = `GRV${String(nextNumber).padStart(8, '0')}`;
-      
-      // Check if this ID already exists
-      const existing = await Grievance.findOne({ grievanceId });
-      if (!existing) {
-        break; // ID is unique, we can use it
-      }
-      
-      console.log(`⚠️ Grievance ID ${grievanceId} already exists, trying next...`);
-      attempts++;
-    }
-    
-    if (attempts >= maxAttempts) {
-      throw new Error('Failed to generate unique grievance ID after multiple attempts');
-    }
-    
-    console.log('🆔 Generated grievanceId:', grievanceId);
+    // Use atomic counter for ID generation (prevents race conditions)
+    const grievanceId = await getNextGrievanceId();
+    console.log('🆔 Generated grievanceId (atomic):', grievanceId);
     
     const grievanceData = {
       grievanceId: grievanceId,  // Add the generated ID
@@ -1499,42 +1440,9 @@ async function createAppointment(
     const appointmentTime = session.data.appointmentTime;
     
     
-    // Generate unique appointmentId by finding the highest existing ID
-    let appointmentId = '';
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (attempts < maxAttempts) {
-      // Find the last appointment ID for this company
-      const lastAppointment = await Appointment.findOne({ companyId: company._id })
-        .sort({ appointmentId: -1 })
-        .select('appointmentId');
-      
-      let nextNumber = 1;
-      if (lastAppointment && lastAppointment.appointmentId) {
-        const match = lastAppointment.appointmentId.match(/^APT(\d+)$/);
-        if (match) {
-          nextNumber = parseInt(match[1], 10) + 1;
-        }
-      }
-      
-      appointmentId = `APT${String(nextNumber).padStart(8, '0')}`;
-      
-      // Check if this ID already exists
-      const existing = await Appointment.findOne({ appointmentId });
-      if (!existing) {
-        break; // ID is unique, we can use it
-      }
-      
-      console.log(`⚠️ Appointment ID ${appointmentId} already exists, trying next...`);
-      attempts++;
-    }
-    
-    if (attempts >= maxAttempts) {
-      throw new Error('Failed to generate unique appointment ID after multiple attempts');
-    }
-    
-    console.log('🆔 Generated appointmentId:', appointmentId);
+    // Use atomic counter for ID generation (prevents race conditions)
+    const appointmentId = await getNextAppointmentId();
+    console.log('🆔 Generated appointmentId (atomic):', appointmentId);
     
     const appointmentData = {
       appointmentId: appointmentId,  // Add the generated ID
@@ -1619,27 +1527,72 @@ async function handleStatusTracking(
   const refNumber = userInput.trim().toUpperCase();
   console.log(`🔍 Tracking request for: ${refNumber} from ${message.from}`);
   
-  // 1. Search for Grievance
-  const grievance = await Grievance.findOne({
-    companyId: company._id,
-    $or: [
-      { grievanceId: refNumber },
-      { citizenPhone: message.from }
-    ],
-    isDeleted: false
-  }).sort({ createdAt: -1 }); // Get latest
-
-  // 2. Search for Appointment
-  const appointment = await Appointment.findOne({
-    companyId: company._id,
-    $or: [
-      { appointmentId: refNumber },
-      { citizenPhone: message.from }
-    ],
-    isDeleted: false
-  }).sort({ createdAt: -1 }); // Get latest
-
+  let grievance = null;
+  let appointment = null;
   let foundRecord = false;
+
+  // SECURITY FIX: Require exact reference number match
+  // Only allow phone number lookup if:
+  // 1. User provided a valid reference number format (GRV... or APT...), OR
+  // 2. User provided phone number and exactly ONE record exists for that phone
+  
+  const isGrievanceRef = refNumber.startsWith('GRV') && /^GRV\d{8}$/.test(refNumber);
+  const isAppointmentRef = refNumber.startsWith('APT') && /^APT\d{8}$/.test(refNumber);
+
+  if (isGrievanceRef) {
+    // Exact reference number match for grievance
+    grievance = await Grievance.findOne({
+      companyId: company._id,
+      grievanceId: refNumber,
+      isDeleted: false
+    });
+  } else if (isAppointmentRef) {
+    // Exact reference number match for appointment
+    appointment = await Appointment.findOne({
+      companyId: company._id,
+      appointmentId: refNumber,
+      isDeleted: false
+    });
+  } else {
+    // Phone number lookup - only if exactly ONE record exists (privacy protection)
+    const grievanceCount = await Grievance.countDocuments({
+      companyId: company._id,
+      citizenPhone: message.from,
+      isDeleted: false
+    });
+    
+    const appointmentCount = await Appointment.countDocuments({
+      companyId: company._id,
+      citizenPhone: message.from,
+      isDeleted: false
+    });
+
+    // Only allow phone lookup if exactly one record exists
+    if (grievanceCount === 1 && appointmentCount === 0) {
+      grievance = await Grievance.findOne({
+        companyId: company._id,
+        citizenPhone: message.from,
+        isDeleted: false
+      });
+    } else if (appointmentCount === 1 && grievanceCount === 0) {
+      appointment = await Appointment.findOne({
+        companyId: company._id,
+        citizenPhone: message.from,
+        isDeleted: false
+      });
+    } else if (grievanceCount > 1 || appointmentCount > 1 || (grievanceCount > 0 && appointmentCount > 0)) {
+      // Multiple records found - require reference number
+      await sendWhatsAppMessage(
+        company,
+        message.from,
+        getTranslation('err_multiple_records', session.language) || 
+        '⚠️ *Multiple Records Found*\n\nWe found multiple records for your phone number. Please provide your exact Reference Number (GRV... or APT...) to track a specific record.\n\nExample: GRV00000001'
+      );
+      session.step = 'track_status';
+      await updateSession(session);
+      return;
+    }
+  }
 
   // Professional formatting for Grievance
   if (grievance && (refNumber.startsWith('GRV') || !appointment)) {

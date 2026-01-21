@@ -146,6 +146,15 @@ const init = async () => {
   } catch (error: any) {
     // Redis is optional
   }
+
+  // Initialize ID counters (for atomic ID generation)
+  try {
+    const { initializeCounters } = await import('./utils/idGenerator');
+    await initializeCounters();
+    logger.info('✅ ID counters initialized');
+  } catch (error: any) {
+    logger.warn('⚠️ Counter initialization failed (non-critical):', error.message);
+  }
 };
 
 // For local development

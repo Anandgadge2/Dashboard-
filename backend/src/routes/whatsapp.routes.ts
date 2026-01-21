@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { requireDatabaseConnection } from '../middleware/dbConnection';
 import { processWhatsAppMessage } from '../services/chatbotEngine';
+import { getRedisClient, isRedisConnected } from '../config/redis';
 
 const router = express.Router();
 
@@ -56,6 +57,17 @@ router.post('/', requireDatabaseConnection, async (req: Request, res: Response) 
 
     for (const message of value.messages) {
       try {
+        const messageId = message.id;
+        
+        // IDEMPOTENCY CHECK: Prevent duplicate processing
+        if (await isMessageProcessed(messageId)) {
+          console.log(`⏭️ Message ${messageId} already processed, skipping...`);
+          continue;
+        }
+
+        // Mark message as processed (TTL: 48 hours)
+        await markMessageAsProcessed(messageId);
+
         if (message.type === 'interactive') {
           console.log('🔘 Interactive message received');
           await handleInteractiveMessage(message, value.metadata);
@@ -183,6 +195,46 @@ async function handleInteractiveMessage(message: any, metadata: any) {
   });
 
   return response;
+}
+
+/**
+ * ============================================================
+ * IDEMPOTENCY PROTECTION
+ * ============================================================
+ * Prevents duplicate processing of the same WhatsApp message
+ */
+const MESSAGE_TTL = 48 * 60 * 60; // 48 hours in seconds
+
+async function isMessageProcessed(messageId: string): Promise<boolean> {
+  const redis = getRedisClient();
+  if (!redis || !isRedisConnected()) {
+    // If Redis unavailable, we can't check idempotency
+    // In production, you might want to use MongoDB as fallback
+    return false;
+  }
+
+  try {
+    const key = `processed_message:${messageId}`;
+    const exists = await redis.exists(key);
+    return exists === 1;
+  } catch (error) {
+    console.error('❌ Error checking message idempotency:', error);
+    return false; // Allow processing if check fails
+  }
+}
+
+async function markMessageAsProcessed(messageId: string): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis || !isRedisConnected()) {
+    return;
+  }
+
+  try {
+    const key = `processed_message:${messageId}`;
+    await redis.setex(key, MESSAGE_TTL, '1');
+  } catch (error) {
+    console.error('❌ Error marking message as processed:', error);
+  }
 }
 
 export default router;
