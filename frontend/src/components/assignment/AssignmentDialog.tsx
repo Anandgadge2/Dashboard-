@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { userAPI, User } from '../../lib/api/user';
 import { departmentAPI, Department } from '../../lib/api/department';
-import { UserCircle, Building2, Search } from 'lucide-react';
+import { UserCircle, Building2, Search, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 interface AssignmentDialogProps {
   isOpen: boolean;
@@ -36,16 +37,18 @@ export default function AssignmentDialog({
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [assigning, setAssigning] = useState(false);
+  const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       fetchDepartments();
-      fetchUsers(); // Fetch all users when dialog opens
       setSearchQuery('');
+      // Don't fetch users yet - wait for department selection
     } else {
       // Reset when dialog closes
       setUsers([]);
+      setSelectedDepartment('');
+      setAssigningUserId(null); // Reset assigning state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, companyId]);
@@ -60,6 +63,14 @@ export default function AssignmentDialog({
       }
     }
   }, [departments, currentDepartmentId, selectedDepartment]);
+
+  // Fetch users when department is selected (optimized)
+  useEffect(() => {
+    if (isOpen && selectedDepartment) {
+      fetchUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDepartment, isOpen]);
 
   const fetchDepartments = async () => {
     try {
@@ -79,17 +90,18 @@ export default function AssignmentDialog({
   };
 
   const fetchUsers = async () => {
+    if (!selectedDepartment) return;
+    
     setLoading(true);
     try {
-      // Fetch ALL users in the company
+      // Only fetch users for the selected department (much faster)
       const usersRes = await userAPI.getAll({ 
         companyId,
-        limit: 1000 // Increased limit to get all users
+        departmentId: selectedDepartment,
+        limit: 100 // Reasonable limit per department
       });
       if (usersRes.success) {
-        // Show all users in the company (no role filtering)
         setUsers(usersRes.data.users);
-        console.log('Loaded users:', usersRes.data.users.length);
       }
     } catch (error) {
       toast.error('Failed to load users');
@@ -100,7 +112,7 @@ export default function AssignmentDialog({
   };
 
   const handleAssign = async (userId: string) => {
-    setAssigning(true);
+    setAssigningUserId(userId); // Track which specific user is being assigned
     
     // Find the user being assigned to for better feedback
     const assignedUser = users.find(u => u._id === userId);
@@ -131,7 +143,7 @@ export default function AssignmentDialog({
     } catch (error: any) {
       toast.error(error.message || 'Failed to assign', { id: toastId });
     } finally {
-      setAssigning(false);
+      setAssigningUserId(null); // Reset after assignment completes
     }
   };
 
@@ -141,36 +153,28 @@ export default function AssignmentDialog({
     return `${currentAssignee.firstName} ${currentAssignee.lastName}`;
   };
 
-  const filteredUsers = users.filter(user => {
-    // Filter by selected department
-    if (selectedDepartment) {
-      const userDeptId = typeof user.departmentId === 'object' 
-        ? user.departmentId?._id 
-        : user.departmentId;
-      if (userDeptId !== selectedDepartment) return false;
-    }
-
-    // Filter by search query
-    if (searchQuery) {
+  // Memoize filtered users for better performance
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return users;
+    
+    const query = searchQuery.toLowerCase();
+    return users.filter(user => {
       const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      const query = searchQuery.toLowerCase();
       return fullName.includes(query) || 
              user.email.toLowerCase().includes(query) ||
              user.userId.toLowerCase().includes(query);
-    }
-
-    return true;
-  });
+    });
+  }, [users, searchQuery]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-2xl font-bold text-slate-900">
             Assign {itemType === 'grievance' ? 'Grievance' : 'Appointment'}
           </DialogTitle>
-          <p className="text-sm text-gray-600 mt-2">
-            Current Assignee: <span className="font-semibold">{getCurrentAssigneeName()}</span>
+          <p className="text-sm text-slate-600 mt-2">
+            Current Assignee: <span className="font-semibold text-slate-900">{getCurrentAssigneeName()}</span>
           </p>
         </DialogHeader>
 
@@ -184,14 +188,14 @@ export default function AssignmentDialog({
                 placeholder="Search by name, email, or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
               />
             </div>
 
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all bg-white"
               required
               disabled={userRole === 'DEPARTMENT_ADMIN'}
             >
@@ -205,16 +209,20 @@ export default function AssignmentDialog({
           </div>
 
           {/* Users List */}
-          <div className="flex-1 overflow-y-auto border rounded-lg">
-            {loading ? (
+          <div className="flex-1 overflow-y-auto border rounded-lg custom-scrollbar">
+            {!selectedDepartment ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600 text-sm">Loading users...</p>
+                <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-600 text-sm">Please select a department to view users</p>
+              </div>
+            ) : loading ? (
+              <div className="p-8 text-center">
+                <LoadingSpinner size="md" text="Loading users..." />
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="p-8 text-center">
-                <UserCircle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-600">No users found</p>
+                <UserCircle className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-600">No users found in this department</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -229,8 +237,8 @@ export default function AssignmentDialog({
                   return (
                     <div
                       key={user._id}
-                      className={`p-4 hover:bg-gray-50 transition-colors ${
-                        isCurrentAssignee ? 'bg-blue-50' : ''
+                      className={`p-4 hover:bg-slate-50 transition-all duration-200 ${
+                        isCurrentAssignee ? 'bg-blue-50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -261,11 +269,21 @@ export default function AssignmentDialog({
                         </div>
                         <Button
                           onClick={() => handleAssign(user._id)}
-                          disabled={assigning || isCurrentAssignee}
+                          disabled={assigningUserId !== null || isCurrentAssignee}
                           variant={isCurrentAssignee ? "outline" : "default"}
                           size="sm"
+                          className="min-w-[80px]"
                         >
-                          {isCurrentAssignee ? 'Assigned' : 'Assign'}
+                          {assigningUserId === user._id ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              Assigning...
+                            </>
+                          ) : isCurrentAssignee ? (
+                            'Assigned'
+                          ) : (
+                            'Assign'
+                          )}
                         </Button>
                       </div>
                     </div>

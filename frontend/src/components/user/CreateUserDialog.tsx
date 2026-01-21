@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,6 +70,72 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
     }
   };
 
+  // Define fetchCompanies and fetchDepartments BEFORE useEffect that uses them
+  const fetchCompanies = useCallback(async () => {
+    try {
+      const response = await companyAPI.getAll();
+      if (response.success) {
+        // Filter companies based on user's scope
+        let filteredCompanies = response.data.companies;
+        
+        if (user?.role === UserRole.COMPANY_ADMIN) {
+          // CompanyAdmin: only show their company
+          const userCompanyId = user?.companyId 
+            ? (typeof user.companyId === 'object' ? user.companyId._id : user.companyId)
+            : '';
+          if (userCompanyId) {
+            filteredCompanies = response.data.companies.filter((company: Company) => {
+              return company._id === userCompanyId;
+            });
+          }
+        }
+        // SUPER_ADMIN can see all companies (no filter)
+        // DEPARTMENT_ADMIN will only see their company (handled in the select dropdown)
+        
+        setCompanies(filteredCompanies);
+      }
+    } catch (error) {
+      console.error('Failed to fetch companies:', error);
+    }
+  }, [user]);
+
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const response = await departmentAPI.getAll();
+      if (response.success) {
+        // Filter departments based on user's scope
+        let filteredDepartments = response.data.departments;
+        
+        if (user?.role === UserRole.COMPANY_ADMIN) {
+          // CompanyAdmin: only show departments in their company
+          const userCompanyId = user?.companyId 
+            ? (typeof user.companyId === 'object' ? user.companyId._id : user.companyId)
+            : '';
+          if (userCompanyId) {
+            filteredDepartments = response.data.departments.filter((dept: Department) => {
+              const deptCompanyId = typeof dept.companyId === 'object' ? dept.companyId._id : dept.companyId;
+              return deptCompanyId === userCompanyId;
+            });
+          }
+        } else if (user?.role === UserRole.DEPARTMENT_ADMIN) {
+          // DepartmentAdmin: only show their department
+          const userDepartmentId = user?.departmentId 
+            ? (typeof user.departmentId === 'object' ? user.departmentId._id : user.departmentId)
+            : '';
+          if (userDepartmentId) {
+            filteredDepartments = response.data.departments.filter((dept: Department) => {
+              return dept._id === userDepartmentId;
+            });
+          }
+        }
+        
+        setDepartments(filteredDepartments);
+      }
+    } catch (error) {
+      console.error('Failed to fetch departments:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (isOpen) {
       fetchCompanies();
@@ -114,7 +180,7 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
         });
       }
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, fetchCompanies, fetchDepartments]);
 
   useEffect(() => {
     // Reset dependent fields when role changes
@@ -124,71 +190,6 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
     // DEPARTMENT_ADMIN and OPERATOR need both companyId and departmentId
     // So we don't clear companyId for DEPARTMENT_ADMIN
   }, [formData.role]);
-
-  const fetchCompanies = async () => {
-    try {
-      const response = await companyAPI.getAll();
-      if (response.success) {
-        // Filter companies based on user's scope
-        let filteredCompanies = response.data.companies;
-        
-        if (user?.role === UserRole.COMPANY_ADMIN) {
-          // CompanyAdmin: only show their company
-          const userCompanyId = user?.companyId 
-            ? (typeof user.companyId === 'object' ? user.companyId._id : user.companyId)
-            : '';
-          if (userCompanyId) {
-            filteredCompanies = response.data.companies.filter((company: Company) => {
-              return company._id === userCompanyId;
-            });
-          }
-        }
-        // SUPER_ADMIN can see all companies (no filter)
-        // DEPARTMENT_ADMIN will only see their company (handled in the select dropdown)
-        
-        setCompanies(filteredCompanies);
-      }
-    } catch (error) {
-      console.error('Failed to fetch companies:', error);
-    }
-  };
-
-  const fetchDepartments = async () => {
-    try {
-      const response = await departmentAPI.getAll();
-      if (response.success) {
-        // Filter departments based on user's scope
-        let filteredDepartments = response.data.departments;
-        
-        if (user?.role === UserRole.COMPANY_ADMIN) {
-          // CompanyAdmin: only show departments in their company
-          const userCompanyId = user?.companyId 
-            ? (typeof user.companyId === 'object' ? user.companyId._id : user.companyId)
-            : '';
-          if (userCompanyId) {
-            filteredDepartments = response.data.departments.filter((dept: Department) => {
-              const deptCompanyId = typeof dept.companyId === 'object' ? dept.companyId._id : dept.companyId;
-              return deptCompanyId === userCompanyId;
-            });
-          }
-        } else if (user?.role === UserRole.DEPARTMENT_ADMIN) {
-          // DepartmentAdmin: only show their department
-          const userDepartmentId = user?.departmentId 
-            ? (typeof user.departmentId === 'object' ? user.departmentId._id : user.departmentId)
-            : '';
-          if (userDepartmentId) {
-            filteredDepartments = response.data.departments.filter((dept: Department) => {
-              return dept._id === userDepartmentId;
-            });
-          }
-        }
-        
-        setDepartments(filteredDepartments);
-      }
-    } catch (error) {
-      console.error('Failed to fetch departments:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

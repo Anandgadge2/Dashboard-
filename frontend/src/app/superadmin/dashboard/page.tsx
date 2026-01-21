@@ -16,6 +16,7 @@ import CreateUserDialog from '@/components/user/CreateUserDialog';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -721,12 +722,11 @@ export default function SuperAdminDashboard() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             {loadingAnalytics ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading analytics...</p>
+              <div className="text-center py-16">
+                <LoadingSpinner size="lg" text="Loading analytics..." />
               </div>
             ) : analyticsData ? (
-              <div className="space-y-8">
+              <div className="space-y-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                 {/* System Overview Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
@@ -763,10 +763,10 @@ export default function SuperAdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Users Distribution</CardTitle>
-                      <CardDescription>Active vs Inactive users</CardDescription>
+                  <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 animate-in fade-in-0 slide-in-from-right-4 duration-500">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                      <CardTitle className="text-slate-900">Users Distribution</CardTitle>
+                      <CardDescription className="text-slate-600">Active vs Inactive users</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={300}>
@@ -801,10 +801,10 @@ export default function SuperAdminDashboard() {
                 {/* Grievance & Appointment Analytics */}
                 {analyticsData.grievances && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Grievance Status Distribution</CardTitle>
-                        <CardDescription>System-wide grievance status</CardDescription>
+                    <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                        <CardTitle className="text-slate-900">Grievance Status Distribution</CardTitle>
+                        <CardDescription className="text-slate-600">System-wide grievance status</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -824,10 +824,10 @@ export default function SuperAdminDashboard() {
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Appointment Status Distribution</CardTitle>
-                        <CardDescription>System-wide appointment status</CardDescription>
+                    <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                        <CardTitle className="text-slate-900">Appointment Status Distribution</CardTitle>
+                        <CardDescription className="text-slate-600">System-wide appointment status</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -852,10 +852,10 @@ export default function SuperAdminDashboard() {
                 {/* Time Series Charts */}
                 {analyticsData.grievances?.daily && analyticsData.grievances.daily.length > 0 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Grievance Trends (Last 7 Days)</CardTitle>
-                        <CardDescription>Daily grievance creation</CardDescription>
+                    <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                        <CardTitle className="text-slate-900">Grievance Trends (Last 7 Days)</CardTitle>
+                        <CardDescription className="text-slate-600">Daily grievance creation</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -876,10 +876,10 @@ export default function SuperAdminDashboard() {
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Appointment Trends (Last 7 Days)</CardTitle>
-                        <CardDescription>Daily appointment creation</CardDescription>
+                    <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                        <CardTitle className="text-slate-900">Appointment Trends (Last 7 Days)</CardTitle>
+                        <CardDescription className="text-slate-600">Daily appointment creation</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
@@ -905,9 +905,9 @@ export default function SuperAdminDashboard() {
                 {/* Performance Metrics */}
                 {analyticsData.grievances && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium text-green-800">Resolution Rate</CardTitle>
+                    <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer">
+                      <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50 border-b border-green-100">
+                        <CardTitle className="text-sm font-semibold text-green-800">Resolution Rate</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-3xl font-bold text-green-700">

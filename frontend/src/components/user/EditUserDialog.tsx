@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,22 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ isOpen, onClose, onUser
     departmentId: ''
   });
 
+  // Define fetchDepartments BEFORE useEffect that uses it
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const companyId = currentUser?.companyId 
+        ? (typeof currentUser.companyId === 'object' ? currentUser.companyId._id : currentUser.companyId)
+        : '';
+      
+      if (companyId) {
+        const response = await departmentAPI.getAll({ companyId });
+        setDepartments(response.data.departments || []);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch departments:', error);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (isOpen && user) {
       // Populate form with user data
@@ -54,22 +70,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ isOpen, onClose, onUser
       
       fetchDepartments();
     }
-  }, [isOpen, user]);
-
-  const fetchDepartments = async () => {
-    try {
-      const companyId = currentUser?.companyId 
-        ? (typeof currentUser.companyId === 'object' ? currentUser.companyId._id : currentUser.companyId)
-        : '';
-      
-      if (companyId) {
-        const response = await departmentAPI.getAll({ companyId });
-        setDepartments(response.data.departments || []);
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch departments:', error);
-    }
-  };
+  }, [isOpen, user, fetchDepartments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

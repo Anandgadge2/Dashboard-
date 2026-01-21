@@ -122,6 +122,7 @@ export default function Dashboard() {
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [navigatingToDepartment, setNavigatingToDepartment] = useState<string | null>(null);
   const [performanceData, setPerformanceData] = useState<any>(null);
   const [hourlyData, setHourlyData] = useState<any>(null);
   const [categoryData, setCategoryData] = useState<any>(null);
@@ -883,13 +884,21 @@ export default function Dashboard() {
                                       </div>
                                       <div className="ml-3">
                                         <div 
-                                          className="text-sm font-bold text-gray-900 group-hover:text-blue-600 cursor-pointer hover:underline"
+                                          className="text-sm font-bold text-gray-900 group-hover:text-blue-600 cursor-pointer hover:underline transition-colors duration-200 flex items-center gap-2"
                                           onClick={() => {
+                                            setNavigatingToDepartment(dept._id);
                                             setSelectedDepartmentId(dept._id);
                                             router.push(`/dashboard/department/${dept._id}`);
                                           }}
                                         >
-                                          {dept.name}
+                                          {navigatingToDepartment === dept._id ? (
+                                            <>
+                                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                                              <span>Loading...</span>
+                                            </>
+                                          ) : (
+                                            dept.name
+                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -1618,11 +1627,11 @@ export default function Dashboard() {
                     <LoadingSpinner size="lg" text="Loading analytics..." />
                   </div>
                 ) : stats ? (
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
                     {/* Interactive Performance Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <Card 
-                        className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+                        className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-105"
                         onClick={() => {
                           const resolutionRate = stats.grievances.total > 0 
                             ? ((stats.grievances.resolved / stats.grievances.total) * 100).toFixed(1)
@@ -1639,7 +1648,7 @@ export default function Dashboard() {
                           setShowMetricDialog(true);
                         }}
                       >
-                        <CardHeader>
+                        <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50 border-b border-green-100">
                           <CardTitle className="text-sm font-semibold text-green-800 flex items-center justify-between">
                             <span>Resolution Rate</span>
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1661,7 +1670,7 @@ export default function Dashboard() {
                       </Card>
 
                       <Card 
-                        className="bg-gradient-to-br from-blue-50 to-cyan-100 border-blue-200 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+                        className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-105"
                         onClick={() => {
                           const completionRate = stats.appointments.total > 0 
                             ? ((stats.appointments.completed / stats.appointments.total) * 100).toFixed(1)
@@ -1678,7 +1687,7 @@ export default function Dashboard() {
                           setShowMetricDialog(true);
                         }}
                       >
-                        <CardHeader>
+                        <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 border-b border-blue-100">
                           <CardTitle className="text-sm font-semibold text-blue-800 flex items-center justify-between">
                             <span>Completion Rate</span>
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1701,7 +1710,7 @@ export default function Dashboard() {
 
                       {stats.grievances.slaComplianceRate !== undefined && (
                         <Card 
-                          className="bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+                          className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-105"
                           onClick={() => {
                             const slaBreaches = stats.grievances.slaBreached || 0;
                             const slaCompliance = stats.grievances.slaComplianceRate?.toFixed(1) || '0.0';
@@ -1717,7 +1726,7 @@ export default function Dashboard() {
                             setShowMetricDialog(true);
                           }}
                         >
-                          <CardHeader>
+                          <CardHeader className="bg-gradient-to-br from-purple-50 to-violet-50 border-b border-purple-100">
                             <CardTitle className="text-sm font-semibold text-purple-800 flex items-center justify-between">
                               <span>SLA Compliance</span>
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1739,7 +1748,7 @@ export default function Dashboard() {
 
                       {stats.grievances.avgResolutionDays !== undefined && (
                         <Card 
-                          className="bg-gradient-to-br from-orange-50 to-amber-100 border-orange-200 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+                          className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-105"
                           onClick={() => {
                             const avgDays = stats.grievances.avgResolutionDays?.toFixed(1) || '0.0';
                             setSelectedMetric({
@@ -1754,7 +1763,7 @@ export default function Dashboard() {
                             setShowMetricDialog(true);
                           }}
                         >
-                          <CardHeader>
+                          <CardHeader className="bg-gradient-to-br from-orange-50 to-amber-50 border-b border-orange-100">
                             <CardTitle className="text-sm font-semibold text-orange-800 flex items-center justify-between">
                               <span>Avg Resolution Time</span>
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1776,9 +1785,9 @@ export default function Dashboard() {
                     {/* STATUS DISTRIBUTION CHARTS */}
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">Grievance Status Distribution</CardTitle>
+                      <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                          <CardTitle className="text-base text-slate-900">Grievance Status Distribution</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={280}>
@@ -1831,9 +1840,9 @@ export default function Dashboard() {
                         </CardContent>
                       </Card>
 
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Grievance Statistics</CardTitle>
+                      <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                          <CardTitle className="text-lg text-slate-900">Grievance Statistics</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={250}>
@@ -1856,9 +1865,9 @@ export default function Dashboard() {
 
                     {/* Appointment Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">Appointment Status Distribution</CardTitle>
+                      <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                          <CardTitle className="text-base text-slate-900">Appointment Status Distribution</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={280}>
@@ -1911,9 +1920,9 @@ export default function Dashboard() {
                         </CardContent>
                       </Card>
 
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Appointment Statistics</CardTitle>
+                      <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                          <CardTitle className="text-lg text-slate-900">Appointment Statistics</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={250}>
@@ -1990,10 +1999,10 @@ export default function Dashboard() {
                     {/* Show only Appointments by Department chart */}
                     {stats.appointments.byDepartment && stats.appointments.byDepartment.length > 0 && (
                       <div className="grid grid-cols-1 gap-6">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base">Appointments by Department</CardTitle>
-                            <CardDescription>Distribution of appointments across departments</CardDescription>
+                        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                          <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                            <CardTitle className="text-base text-slate-900">Appointments by Department</CardTitle>
+                            <CardDescription className="text-slate-600">Distribution of appointments across departments</CardDescription>
                           </CardHeader>
                           <CardContent>
                             <ResponsiveContainer width="100%" height={250}>
