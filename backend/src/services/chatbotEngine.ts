@@ -794,26 +794,39 @@ async function continueGrievanceFlow(
       console.log('🏬 All departments:', departments.map(d => ({ name: d.name, id: d._id })));
       
       if (departments.length > 0) {
-        // WhatsApp allows max 10 rows per section, so split if needed
-        const deptRows = departments.slice(0, 10).map(dept => {
-          // Try to translate department name
-          const translatedName = getTranslation(`dept_${dept.name}`, session.language);
-          const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
+        // WhatsApp allows max 10 rows per section, max 10 sections (100 total items)
+        // Split departments into sections of 10 each
+        const sections = [];
+        const maxSections = 10;
+        const maxRowsPerSection = 10;
+        
+        for (let i = 0; i < departments.length && sections.length < maxSections; i += maxRowsPerSection) {
+          const deptChunk = departments.slice(i, i + maxRowsPerSection);
+          const deptRows = deptChunk.map(dept => {
+            // Try to translate department name
+            const translatedName = getTranslation(`dept_${dept.name}`, session.language);
+            const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
+            
+            return {
+              id: `grv_dept_${dept._id}`,
+              title: displayName.length > 24 ? displayName.substring(0, 21) + '...' : displayName,
+              description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || ''
+            };
+          });
           
-          return {
-            id: `grv_dept_${dept._id}`,
-            title: displayName.length > 24 ? displayName.substring(0, 21) + '...' : displayName,
-            description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || ''
-          };
-        });
+          // Create section title (use different titles for multiple sections)
+          const sectionTitle: string = sections.length === 0 
+            ? getTranslation('btn_select_dept', session.language)
+            : `${getTranslation('btn_select_dept', session.language)} (${sections.length + 1})`;
+          
+          sections.push({
+            title: sectionTitle,
+            rows: deptRows
+          });
+        }
         
-        // Create sections (WhatsApp requires at least 1 section with 1-10 rows)
-        const sections = [{
-          title: getTranslation('btn_select_dept', session.language),
-          rows: deptRows
-        }];
-        
-        console.log('📋 Sending department list with', deptRows.length, 'departments');
+        const totalRows = sections.reduce((sum, s) => sum + s.rows.length, 0);
+        console.log('📋 Sending department list with', totalRows, 'departments in', sections.length, 'sections');
         
         try {
           await sendWhatsAppList(
@@ -1197,9 +1210,15 @@ async function startAppointmentFlow(session: UserSession, message: ChatbotMessag
       buttons
     );
   } else {
-    const sections = [{
-      title: getTranslation('btn_select_dept', session.language),
-      rows: departments.slice(0, 10).map(dept => {
+    // WhatsApp allows max 10 rows per section, max 10 sections (100 total items)
+    // Split departments into sections of 10 each
+    const sections = [];
+    const maxSections = 10;
+    const maxRowsPerSection = 10;
+    
+    for (let i = 0; i < departments.length && sections.length < maxSections; i += maxRowsPerSection) {
+      const deptChunk = departments.slice(i, i + maxRowsPerSection);
+      const deptRows = deptChunk.map(dept => {
         const translatedName = getTranslation(`dept_${dept.name}`, session.language);
         const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
         return {
@@ -1207,10 +1226,21 @@ async function startAppointmentFlow(session: UserSession, message: ChatbotMessag
           title: displayName.length > 24 ? displayName.substring(0, 21) + '...' : displayName,
           description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || ''
         };
-      })
-    }];
+      });
+      
+      // Create section title (use different titles for multiple sections)
+      const sectionTitle: string = sections.length === 0 
+        ? getTranslation('btn_select_dept', session.language)
+        : `${getTranslation('btn_select_dept', session.language)} (${sections.length + 1})`;
+      
+      sections.push({
+        title: sectionTitle,
+        rows: deptRows
+      });
+    }
     
-    console.log('📋 Sending department list:', sections);
+    const totalRows = sections.reduce((sum, s) => sum + s.rows.length, 0);
+    console.log('📋 Sending department list:', totalRows, 'departments in', sections.length, 'sections');
     
     await sendWhatsAppList(
       company,

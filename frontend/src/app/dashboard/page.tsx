@@ -351,6 +351,12 @@ export default function Dashboard() {
   };
 
   const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    // Prevent self-deactivation
+    if (user && userId === user.id) {
+      toast.error('You cannot deactivate yourself');
+      return;
+    }
+
     try {
       const response = await userAPI.update(userId, { isActive: !currentStatus } as any);
       if (response.success) {
@@ -358,7 +364,8 @@ export default function Dashboard() {
         fetchUsers();
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update user status');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update user status';
+      toast.error(errorMessage);
     }
   };
 
@@ -875,15 +882,22 @@ export default function Dashboard() {
                         {isCompanyAdmin ? 'Manage users in your company' : 'Manage users in your department'}
                       </CardDescription>
                     </div>
-                    <ProtectedButton
-                      permission={Permission.CREATE_USER}
-                      onClick={() => setShowUserDialog(true)}
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add User
-                    </ProtectedButton>
+                    {hasPermission(user?.role || '', Permission.CREATE_USER) && (
+                      <Button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowUserDialog(true);
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add User
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -937,7 +951,7 @@ export default function Dashboard() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100 bg-white">
-                            {getSortedData(users, 'users').map((u) => (
+                            {getSortedData(users, 'users').map((u: User) => (
                               <tr key={u._id} className="hover:bg-gray-50/50 transition-colors duration-150 group/row">
                                 <td className="px-6 py-5 whitespace-nowrap">
                                   <div className="flex items-center">
@@ -1002,7 +1016,15 @@ export default function Dashboard() {
                                     <div className="flex items-center">
                                       <button 
                                         onClick={() => handleToggleUserStatus(u._id, u.isActive)}
-                                        className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${u.isActive ? 'bg-green-500' : 'bg-red-400'}`}
+                                        disabled={user && u._id === user.id}
+                                        className={`relative inline-flex h-5 w-10 flex-shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                          user && u._id === user.id 
+                                            ? 'bg-gray-300 cursor-not-allowed opacity-50' 
+                                            : u.isActive 
+                                              ? 'bg-green-500 cursor-pointer' 
+                                              : 'bg-red-400 cursor-pointer'
+                                        }`}
+                                        title={user && u._id === user.id ? 'You cannot deactivate yourself' : 'Toggle user status'}
                                       >
                                         <span className="sr-only">Toggle user status</span>
                                         <span
@@ -1011,7 +1033,15 @@ export default function Dashboard() {
                                       </button>
                                       <button 
                                         onClick={() => handleToggleUserStatus(u._id, u.isActive)}
-                                        className={`ml-2 text-[10px] font-bold uppercase tracking-wider ${u.isActive ? 'text-red-500 hover:text-red-600' : 'text-green-600 hover:text-green-700'} hover:underline transition-colors`}
+                                        disabled={user && u._id === user.id}
+                                        className={`ml-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                                          user && u._id === user.id 
+                                            ? 'text-gray-400 cursor-not-allowed' 
+                                            : u.isActive 
+                                              ? 'text-red-500 hover:text-red-600 hover:underline' 
+                                              : 'text-green-600 hover:text-green-700 hover:underline'
+                                        }`}
+                                        title={user && u._id === user.id ? 'You cannot deactivate yourself' : u.isActive ? 'Deactivate' : 'Activate'}
                                       >
                                         {u.isActive ? 'Deactivate' : 'Activate'}
                                       </button>
@@ -1020,58 +1050,76 @@ export default function Dashboard() {
                                 </td>
                                 <td className="px-6 py-5 whitespace-nowrap text-right">
                                   <div className="flex justify-end items-center space-x-2">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                      title="Edit User"
-                                      onClick={() => {
-                                        setEditingUser(u);
-                                        setShowEditUserDialog(true);
-                                      }}
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-8 w-8 p-0 text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
-                                      title="Change Permissions"
-                                      onClick={() => {
-                                        setEditingUser(u);
-                                        setShowChangePermissionsDialog(true);
-                                      }}
-                                    >
-                                      <Shield className="w-4 h-4" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                      title="Delete User"
-                                      onClick={() => {
-                                        setConfirmDialog({
-                                          isOpen: true,
-                                          title: 'Delete User',
-                                          message: `Are you sure you want to delete ${u.firstName} ${u.lastName}? This action cannot be undone.`,
-                                          onConfirm: async () => {
-                                            try {
-                                              const response = await userAPI.delete(u._id);
-                                              if (response.success) {
-                                                toast.success('User deleted successfully');
-                                                fetchUsers();
-                                              }
-                                            } catch (error: any) {
-                                              toast.error(error.message || 'Failed to delete user');
-                                            } finally {
-                                              setConfirmDialog(p => ({ ...p, isOpen: false }));
-                                            }
+                                    {hasPermission(user?.role || '', Permission.UPDATE_USER) && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                        title="Edit User"
+                                        onClick={() => {
+                                          setEditingUser(u);
+                                          setShowEditUserDialog(true);
+                                        }}
+                                      >
+                                        <Edit2 className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                    {hasPermission(user?.role || '', Permission.UPDATE_USER) && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0 text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                                        title="Change Permissions"
+                                        onClick={() => {
+                                          setEditingUser(u);
+                                          setShowChangePermissionsDialog(true);
+                                        }}
+                                      >
+                                        <Shield className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                    {hasPermission(user?.role || '', Permission.DELETE_USER) && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className={`h-8 w-8 p-0 transition-colors ${
+                                          user && u._id === user.id 
+                                            ? 'text-gray-300 cursor-not-allowed' 
+                                            : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                                        }`}
+                                        title={user && u._id === user.id ? 'You cannot delete yourself' : 'Delete User'}
+                                        disabled={user && u._id === user.id}
+                                        onClick={() => {
+                                          // Prevent self-deletion
+                                          if (user && u._id === user.id) {
+                                            toast.error('You cannot delete yourself');
+                                            return;
                                           }
-                                        } as any);
-                                      }}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                          
+                                          setConfirmDialog({
+                                            isOpen: true,
+                                            title: 'Delete User',
+                                            message: `Are you sure you want to delete ${u.firstName} ${u.lastName}? This action cannot be undone.`,
+                                            onConfirm: async () => {
+                                              try {
+                                                const response = await userAPI.delete(u._id);
+                                                if (response.success) {
+                                                  toast.success('User deleted successfully');
+                                                  fetchUsers();
+                                                }
+                                              } catch (error: any) {
+                                                const errorMessage = error.response?.data?.message || error.message || 'Failed to delete user';
+                                                toast.error(errorMessage);
+                                              } finally {
+                                                setConfirmDialog(p => ({ ...p, isOpen: false }));
+                                              }
+                                            }
+                                          } as any);
+                                        }}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -2244,21 +2292,23 @@ export default function Dashboard() {
         </Tabs>
 
         {/* Dialogs */}
-        {isCompanyAdmin && (
+        {(isCompanyAdmin || isDepartmentAdmin) && (
           <>
-            <CreateDepartmentDialog
-              isOpen={showDepartmentDialog}
-              onClose={() => {
-                setShowDepartmentDialog(false);
-                setEditingDepartment(null);
-              }}
-              onDepartmentCreated={() => {
-                fetchDepartments();
-                fetchDashboardData();
-                setEditingDepartment(null);
-              }}
-              editingDepartment={editingDepartment}
-            />
+            {isCompanyAdmin && (
+              <CreateDepartmentDialog
+                isOpen={showDepartmentDialog}
+                onClose={() => {
+                  setShowDepartmentDialog(false);
+                  setEditingDepartment(null);
+                }}
+                onDepartmentCreated={() => {
+                  fetchDepartments();
+                  fetchDashboardData();
+                  setEditingDepartment(null);
+                }}
+                editingDepartment={editingDepartment}
+              />
+            )}
             <ConfirmDialog
               isOpen={confirmDialog.isOpen}
               title={confirmDialog.title}

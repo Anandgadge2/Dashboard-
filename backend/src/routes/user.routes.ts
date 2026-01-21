@@ -363,6 +363,15 @@ router.put('/:id', requirePermission(Permission.UPDATE_USER), async (req: Reques
       return;
     }
 
+    // Prevent self-deactivation
+    if (existingUser._id.toString() === currentUser._id.toString() && req.body.isActive === false) {
+      res.status(403).json({
+        success: false,
+        message: 'You cannot deactivate yourself'
+      });
+      return;
+    }
+
     // Check access
     if (currentUser.role !== UserRole.SUPER_ADMIN) {
       if (currentUser.role === UserRole.COMPANY_ADMIN && existingUser.companyId?.toString() !== currentUser.companyId?.toString()) {
@@ -424,6 +433,15 @@ router.delete('/:id', requirePermission(Permission.DELETE_USER), async (req: Req
       res.status(404).json({
         success: false,
         message: 'User not found'
+      });
+      return;
+    }
+
+    // Prevent self-deletion
+    if (existingUser._id.toString() === currentUser._id.toString()) {
+      res.status(403).json({
+        success: false,
+        message: 'You cannot delete yourself'
       });
       return;
     }
