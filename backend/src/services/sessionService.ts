@@ -1,5 +1,6 @@
 import { getRedisClient, isRedisConnected } from '../config/redis';
 import WhatsAppSession from '../models/WhatsAppSession';
+import Company from '../models/Company';
 import mongoose from 'mongoose';
 
 export interface UserSession {
@@ -31,6 +32,35 @@ function getSessionKey(phoneNumber: string, companyId: string): string {
  */
 function getLockKey(phoneNumber: string, companyId: string): string {
   return `lock:${phoneNumber}:${companyId}`;
+}
+
+/**
+ * Convert companyId string (e.g., "CMP000001") to MongoDB ObjectId
+ * by looking up the Company document
+ */
+async function getCompanyObjectId(companyId: string): Promise<mongoose.Types.ObjectId | null> {
+  try {
+    // First check if it's already a valid ObjectId (24 hex chars)
+    if (mongoose.Types.ObjectId.isValid(companyId) && companyId.length === 24) {
+      return new mongoose.Types.ObjectId(companyId);
+    }
+    
+    // Otherwise, look up by companyId string field
+    const company = await Company.findOne({ companyId });
+    if (company) {
+      return company._id;
+    }
+    
+    // If not found, try as _id directly (in case it's already an ObjectId string)
+    if (mongoose.Types.ObjectId.isValid(companyId)) {
+      return new mongoose.Types.ObjectId(companyId);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error converting companyId to ObjectId:', error);
+    return null;
+  }
 }
 
 /**
@@ -94,34 +124,38 @@ export async function getSession(phoneNumber: string, companyId: string): Promis
 
   // Try MongoDB as fallback
   try {
-    const companyObjectId = new mongoose.Types.ObjectId(companyId);
-    const dbSession = await WhatsAppSession.findOne({
-      phoneNumber,
-      companyId: companyObjectId,
-      isActive: true,
-      expiresAt: { $gt: new Date() }
-    });
+    const companyObjectId = await getCompanyObjectId(companyId);
+    if (companyObjectId) {
+      const dbSession = await WhatsAppSession.findOne({
+        phoneNumber,
+        companyId: companyObjectId,
+        isActive: true,
+        expiresAt: { $gt: new Date() }
+      });
 
-    if (dbSession) {
-      const session: UserSession = {
-        companyId: dbSession.companyId.toString(),
-        phoneNumber: dbSession.phoneNumber,
-        language: (dbSession.language as 'en' | 'hi' | 'mr') || 'en',
-        step: dbSession.currentStep || 'start',
-        data: dbSession.sessionData || {},
-        lastActivity: dbSession.lastMessageAt
-      };
+      if (dbSession) {
+        // Get the companyId string back from the Company document
+        const company = await Company.findById(companyObjectId);
+        const session: UserSession = {
+          companyId: company?.companyId || companyId,
+          phoneNumber: dbSession.phoneNumber,
+          language: (dbSession.language as 'en' | 'hi' | 'mr') || 'en',
+          step: dbSession.currentStep || 'start',
+          data: dbSession.sessionData || {},
+          lastActivity: dbSession.lastMessageAt
+        };
 
-      // Sync to Redis if available
-      if (redis && isRedisConnected()) {
-        try {
-          await redis.setex(sessionKey, SESSION_TTL, JSON.stringify(session));
-        } catch (error) {
-          console.error('❌ Error syncing session to Redis:', error);
+        // Sync to Redis if available
+        if (redis && isRedisConnected()) {
+          try {
+            await redis.setex(sessionKey, SESSION_TTL, JSON.stringify(session));
+          } catch (error) {
+            console.error('❌ Error syncing session to Redis:', error);
+          }
         }
-      }
 
-      return session;
+        return session;
+      }
     }
   } catch (error) {
     console.error('❌ Error reading session from MongoDB:', error);
@@ -155,21 +189,25 @@ export async function getSession(phoneNumber: string, companyId: string): Promis
 
   // Save to MongoDB
   try {
-    const companyObjectId = new mongoose.Types.ObjectId(companyId);
-    await WhatsAppSession.findOneAndUpdate(
-      { phoneNumber, companyId: companyObjectId },
-      {
-        phoneNumber,
-        companyId: companyObjectId,
-        currentStep: 'start',
-        sessionData: {},
-        language: 'en',
-        isActive: true,
-        lastMessageAt: new Date(),
-        expiresAt: new Date(Date.now() + SESSION_TTL * 1000)
-      },
-      { upsert: true, new: true }
-    );
+    const companyObjectId = await getCompanyObjectId(companyId);
+    if (companyObjectId) {
+      await WhatsAppSession.findOneAndUpdate(
+        { phoneNumber, companyId: companyObjectId },
+        {
+          phoneNumber,
+          companyId: companyObjectId,
+          currentStep: 'start',
+          sessionData: {},
+          language: 'en',
+          isActive: true,
+          lastMessageAt: new Date(),
+          expiresAt: new Date(Date.now() + SESSION_TTL * 1000)
+        },
+        { upsert: true, new: true }
+      );
+    } else {
+      console.warn(`⚠️ Could not find Company with companyId: ${companyId}, skipping MongoDB save`);
+    }
   } catch (error) {
     console.error('❌ Error saving session to MongoDB:', error);
   }
@@ -215,19 +253,23 @@ export async function updateSession(session: UserSession): Promise<void> {
 
     // Update MongoDB
     try {
-      const companyObjectId = new mongoose.Types.ObjectId(session.companyId);
-      await WhatsAppSession.findOneAndUpdate(
-        { phoneNumber: session.phoneNumber, companyId: companyObjectId },
-        {
-          currentStep: session.step,
-          sessionData: session.data,
-          language: session.language,
-          lastMessageAt: session.lastActivity,
-          expiresAt: new Date(Date.now() + SESSION_TTL * 1000),
-          isActive: true
-        },
-        { upsert: true, new: true }
-      );
+      const companyObjectId = await getCompanyObjectId(session.companyId);
+      if (companyObjectId) {
+        await WhatsAppSession.findOneAndUpdate(
+          { phoneNumber: session.phoneNumber, companyId: companyObjectId },
+          {
+            currentStep: session.step,
+            sessionData: session.data,
+            language: session.language,
+            lastMessageAt: session.lastActivity,
+            expiresAt: new Date(Date.now() + SESSION_TTL * 1000),
+            isActive: true
+          },
+          { upsert: true, new: true }
+        );
+      } else {
+        console.warn(`⚠️ Could not find Company with companyId: ${session.companyId}, skipping MongoDB update`);
+      }
     } catch (error) {
       console.error('❌ Error updating session in MongoDB:', error);
     }
@@ -268,11 +310,15 @@ export async function clearSession(phoneNumber: string, companyId: string): Prom
 
     // Delete from MongoDB
     try {
-      const companyObjectId = new mongoose.Types.ObjectId(companyId);
-      await WhatsAppSession.findOneAndUpdate(
-        { phoneNumber, companyId: companyObjectId },
-        { isActive: false }
-      );
+      const companyObjectId = await getCompanyObjectId(companyId);
+      if (companyObjectId) {
+        await WhatsAppSession.findOneAndUpdate(
+          { phoneNumber, companyId: companyObjectId },
+          { isActive: false }
+        );
+      } else {
+        console.warn(`⚠️ Could not find Company with companyId: ${companyId}, skipping MongoDB delete`);
+      }
     } catch (error) {
       console.error('❌ Error deleting session from MongoDB:', error);
     }
