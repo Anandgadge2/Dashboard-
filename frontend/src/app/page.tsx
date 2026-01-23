@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
+import { validatePhoneNumber, validatePassword, normalizePhoneNumber } from '@/lib/utils/phoneUtils';
 
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
@@ -43,8 +44,24 @@ export default function LoginPage() {
       return;
     }
 
+    // Validate phone number - must be exactly 10 digits
+    if (!validatePhoneNumber(phone.trim())) {
+      const msg = 'Phone number must be exactly 10 digits';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
     if (!password.trim()) {
       const msg = 'Please enter your password';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    // Validate password - must be at least 6 characters
+    if (!validatePassword(password.trim())) {
+      const msg = 'Password must be at least 6 characters';
       setError(msg);
       toast.error(msg);
       return;
@@ -53,8 +70,10 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      console.log('🔐 Attempting login with:', { phone: phone.trim() });
-      await login({ phone: phone.trim(), password: password.trim() });
+      // Normalize phone number (add 91 prefix) before sending to backend
+      const normalizedPhone = normalizePhoneNumber(phone.trim());
+      console.log('🔐 Attempting login with:', { phone: normalizedPhone });
+      await login({ phone: normalizedPhone, password: password.trim() });
       console.log('✅ Login successful');
       // Success - login function handles redirect
     } catch (error: any) {
@@ -185,13 +204,21 @@ export default function LoginPage() {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="91xxxxxxxxxx"
+                      placeholder="10 digit number (e.g., 9356150561)"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        // Only allow digits, max 10
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setPhone(value);
+                      }}
+                      maxLength={10}
                       required
                       disabled={loading}
                       className="pl-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
                     />
+                    {phone && !validatePhoneNumber(phone) && (
+                      <p className="text-xs text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                    )}
                   </div>
                 </div>
 
@@ -206,13 +233,17 @@ export default function LoginPage() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Enter your password (min 6 characters)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      minLength={6}
                       required
                       disabled={loading}
                       className="pl-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
                     />
+                    {password && !validatePassword(password) && (
+                      <p className="text-xs text-red-500 mt-1">Password must be at least 6 characters</p>
+                    )}
                   </div>
                 </div>
 

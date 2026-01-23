@@ -11,6 +11,7 @@ import { departmentAPI, Department } from '@/lib/api/department';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/lib/permissions';
 import toast from 'react-hot-toast';
+import { validatePhoneNumber, validatePassword, normalizePhoneNumber } from '@/lib/utils/phoneUtils';
 
 interface CreateUserDialogProps {
   isOpen: boolean;
@@ -199,6 +200,18 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
       return;
     }
 
+    // Validate phone number if provided
+    if (formData.phone && !validatePhoneNumber(formData.phone)) {
+      toast.error('Phone number must be exactly 10 digits');
+      return;
+    }
+
+    // Validate password - must be at least 6 characters
+    if (!validatePassword(formData.password)) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
     // Role-specific validation
     if (formData.role === UserRole.SUPER_ADMIN) {
       // SuperAdmin doesn't need companyId or departmentId
@@ -223,7 +236,12 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
 
     setLoading(true);
     try {
-      const response = await userAPI.create(formData);
+      // Normalize phone number before sending (add 91 prefix if 10 digits)
+      const userData = {
+        ...formData,
+        phone: formData.phone ? normalizePhoneNumber(formData.phone) : ''
+      };
+      const response = await userAPI.create(userData);
       if (response.success) {
         toast.success('User created successfully!');
         setFormData({
@@ -337,11 +355,15 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
                   id="password"
                   name="password"
                   type="password"
+                  minLength={6}
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  placeholder="Secure password"
+                  placeholder="Min 6 characters"
                 />
+                {formData.password && !validatePassword(formData.password) && (
+                  <p className="text-xs text-red-500 mt-1">Password must be at least 6 characters</p>
+                )}
               </div>
             </div>
 
@@ -353,9 +375,17 @@ const CreateUserDialog: React.FC<CreateUserDialogProps> = ({ isOpen, onClose, on
                   name="phone"
                   type="tel"
                   value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+1234567890"
+                  onChange={(e) => {
+                    // Only allow digits, max 10
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData(prev => ({ ...prev, phone: value }));
+                  }}
+                  maxLength={10}
+                  placeholder="10 digit number (1234567890)"
                 />
+                {formData.phone && !validatePhoneNumber(formData.phone) && (
+                  <p className="text-xs text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="role">Role *</Label>

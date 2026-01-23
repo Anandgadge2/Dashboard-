@@ -93,14 +93,47 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
       });
     }
 
-    console.log('Creating company with data:', { name, companyType, contactEmail, contactPhone });
+    // Validate and normalize contact phone
+    const { validatePhoneNumber, normalizePhoneNumber } = await import('../utils/phoneUtils');
+    if (!validatePhoneNumber(contactPhone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Contact phone number must be exactly 10 digits'
+      });
+    }
+    const normalizedContactPhone = normalizePhoneNumber(contactPhone);
+
+    // Validate admin password if admin is provided
+    if (admin && admin.password) {
+      const { validatePassword } = await import('../utils/phoneUtils');
+      if (!validatePassword(admin.password)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Admin password must be at least 6 characters'
+        });
+      }
+    }
+
+    // Validate and normalize admin phone if provided
+    let normalizedAdminPhone = admin?.phone;
+    if (admin && admin.phone) {
+      if (!validatePhoneNumber(admin.phone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Admin phone number must be exactly 10 digits'
+        });
+      }
+      normalizedAdminPhone = normalizePhoneNumber(admin.phone);
+    }
+
+    console.log('Creating company with data:', { name, companyType, contactEmail, contactPhone: normalizedContactPhone });
 
     // Create company
     const company = await Company.create({
       name,
       companyType,
       contactEmail,
-      contactPhone,
+      contactPhone: normalizedContactPhone,
       address,
       enabledModules: enabledModules || [],
       theme: theme || {
@@ -127,7 +160,7 @@ router.post('/', requireSuperAdmin, async (req: Request, res: Response) => {
           lastName: admin.lastName,
           email: admin.email,
           password: admin.password, // Pre-save hook will hash this
-          phone: admin.phone || contactPhone,
+          phone: normalizedAdminPhone || normalizedContactPhone,
           role: UserRole.COMPANY_ADMIN,
           companyId: company._id,
           isActive: true,
@@ -274,9 +307,23 @@ router.get('/:id', requireSuperAdmin, async (req: Request, res: Response) => {
 // @access  Private/SuperAdmin
 router.put('/:id', requireSuperAdmin, async (req: Request, res: Response) => {
   try {
+    // Normalize phone numbers if provided in update
+    const updateData: any = { ...req.body };
+    
+    if (updateData.contactPhone) {
+      const { validatePhoneNumber, normalizePhoneNumber } = await import('../utils/phoneUtils');
+      if (!validatePhoneNumber(updateData.contactPhone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Contact phone number must be exactly 10 digits'
+        });
+      }
+      updateData.contactPhone = normalizePhoneNumber(updateData.contactPhone);
+    }
+
     const company = await Company.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 

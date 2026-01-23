@@ -124,6 +124,27 @@ router.post('/', requirePermission(Permission.CREATE_USER), async (req: Request,
         message: 'Please provide all required fields'
       });
     }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters'
+      });
+    }
+
+    // Validate and normalize phone number if provided
+    let normalizedPhone = phone;
+    if (phone) {
+      const { validatePhoneNumber, normalizePhoneNumber } = await import('../utils/phoneUtils');
+      if (!validatePhoneNumber(phone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number must be exactly 10 digits'
+        });
+      }
+      normalizedPhone = normalizePhoneNumber(phone);
+    }
     console.log('✅ Basic validation passed');
 
     // Check if email already exists
@@ -225,7 +246,7 @@ router.post('/', requirePermission(Permission.CREATE_USER), async (req: Request,
         lastName,
         email: email.toLowerCase().trim(),
         password,
-        phone,
+        phone: normalizedPhone || undefined,
         role,
         companyId: finalCompanyId || undefined,
         departmentId: departmentId || undefined,

@@ -9,6 +9,7 @@ import { departmentAPI, Department } from '@/lib/api/department';
 import { companyAPI, Company } from '@/lib/api/company';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { validatePhoneNumber, normalizePhoneNumber } from '@/lib/utils/phoneUtils';
 
 interface CreateDepartmentDialogProps {
   isOpen: boolean;
@@ -81,18 +82,29 @@ const CreateDepartmentDialog: React.FC<CreateDepartmentDialogProps> = ({ isOpen,
       return;
     }
 
+    // Validate phone number if provided
+    if (formData.contactPhone && !validatePhoneNumber(formData.contactPhone)) {
+      toast.error('Contact phone number must be exactly 10 digits');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Normalize phone number before sending (add 91 prefix if 10 digits)
+      const departmentData = {
+        ...formData,
+        contactPhone: formData.contactPhone ? normalizePhoneNumber(formData.contactPhone) : ''
+      };
       let response;
       if (editingDepartment) {
-        response = await departmentAPI.update(editingDepartment._id, formData);
+        response = await departmentAPI.update(editingDepartment._id, departmentData);
         if (response.success) {
           toast.success('Department updated successfully!');
         } else {
           toast.error('Failed to update department');
         }
       } else {
-        response = await departmentAPI.create(formData);
+        response = await departmentAPI.create(departmentData);
         if (response.success) {
           toast.success('Department created successfully!');
         } else {
@@ -218,9 +230,17 @@ const CreateDepartmentDialog: React.FC<CreateDepartmentDialogProps> = ({ isOpen,
                   name="contactPhone"
                   type="tel"
                   value={formData.contactPhone}
-                  onChange={handleChange}
-                  placeholder="+1234567890"
+                  onChange={(e) => {
+                    // Only allow digits, max 10
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData(prev => ({ ...prev, contactPhone: value }));
+                  }}
+                  maxLength={10}
+                  placeholder="10 digit number (e.g., 9356150561)"
                 />
+                {formData.contactPhone && !validatePhoneNumber(formData.contactPhone) && (
+                  <p className="text-xs text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                )}
               </div>
             </div>
 

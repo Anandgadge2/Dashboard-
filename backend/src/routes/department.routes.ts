@@ -98,6 +98,19 @@ router.post('/', requirePermission(Permission.CREATE_DEPARTMENT), async (req: Re
       return;
     }
 
+    // Validate and normalize phone number if provided
+    let normalizedContactPhone = contactPhone;
+    if (contactPhone) {
+      const { validatePhoneNumber, normalizePhoneNumber } = await import('../utils/phoneUtils');
+      if (!validatePhoneNumber(contactPhone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Contact phone number must be exactly 10 digits'
+        });
+      }
+      normalizedContactPhone = normalizePhoneNumber(contactPhone);
+    }
+
     // Non-SuperAdmin users can only create departments for their own company
     if (user.role !== UserRole.SUPER_ADMIN && companyId !== user.companyId?.toString()) {
       res.status(403).json({
@@ -113,7 +126,7 @@ router.post('/', requirePermission(Permission.CREATE_DEPARTMENT), async (req: Re
       description,
       contactPerson,
       contactEmail,
-      contactPhone
+      contactPhone: normalizedContactPhone
     });
 
     await logUserAction(
@@ -201,9 +214,23 @@ router.put('/:id', requirePermission(Permission.UPDATE_DEPARTMENT), async (req: 
       return;
     }
 
+    // Normalize phone number if provided in update
+    const updateData: any = { ...req.body };
+    
+    if (updateData.contactPhone) {
+      const { validatePhoneNumber, normalizePhoneNumber } = await import('../utils/phoneUtils');
+      if (!validatePhoneNumber(updateData.contactPhone)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Contact phone number must be exactly 10 digits'
+        });
+      }
+      updateData.contactPhone = normalizePhoneNumber(updateData.contactPhone);
+    }
+
     const department = await Department.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 

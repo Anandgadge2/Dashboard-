@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { companyAPI, CreateCompanyData, Company } from '@/lib/api/company';
 import toast from 'react-hot-toast';
+import { validatePhoneNumber, validatePassword, normalizePhoneNumber } from '@/lib/utils/phoneUtils';
 
 // Available modules
 const AVAILABLE_MODULES = [
@@ -111,18 +112,46 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
       return;
     }
 
+    // Validate contact phone if provided
+    if (formData.contactPhone && !validatePhoneNumber(formData.contactPhone)) {
+      toast.error('Contact phone number must be exactly 10 digits');
+      return;
+    }
+
+    // Validate admin phone if provided
+    if (showAdminForm && formData.admin?.phone && !validatePhoneNumber(formData.admin.phone)) {
+      toast.error('Admin phone number must be exactly 10 digits');
+      return;
+    }
+
+    // Validate admin password if admin form is shown
+    if (showAdminForm && formData.admin?.password && !validatePassword(formData.admin.password)) {
+      toast.error('Admin password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Normalize phone numbers before sending (add 91 prefix if 10 digits)
+      const companyData: CreateCompanyData = {
+        ...formData,
+        contactPhone: formData.contactPhone ? normalizePhoneNumber(formData.contactPhone) : '',
+        admin: formData.admin ? {
+          ...formData.admin,
+          phone: formData.admin.phone ? normalizePhoneNumber(formData.admin.phone) : ''
+        } : formData.admin
+      };
+      
       let response;
       if (editingCompany) {
         // Update existing company
-        response = await companyAPI.update(editingCompany._id, formData);
+        response = await companyAPI.update(editingCompany._id, companyData);
         if (response.success) {
           toast.success('Company updated successfully!');
         }
       } else {
         // Create new company
-        response = await companyAPI.create(formData);
+        response = await companyAPI.create(companyData);
         if (response.success) {
           toast.success('Company created successfully!');
         }
@@ -253,10 +282,18 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
                   name="contactPhone"
                   type="tel"
                   value={formData.contactPhone}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    // Only allow digits, max 10
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData(prev => ({ ...prev, contactPhone: value }));
+                  }}
+                  maxLength={10}
                   required
-                  placeholder="+1234567890"
+                  placeholder="10 digit number (e.g., 9356150561)"
                 />
+                {formData.contactPhone && !validatePhoneNumber(formData.contactPhone) && (
+                  <p className="text-xs text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                )}
               </div>
             </div>
 
@@ -361,9 +398,13 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
                         type="password"
                         value={formData.admin?.password || ''}
                         onChange={handleAdminChange}
+                        minLength={6}
                         required
-                        placeholder="Secure password"
+                        placeholder="Min 6 characters"
                       />
+                      {formData.admin?.password && !validatePassword(formData.admin.password) && (
+                        <p className="text-xs text-red-500 mt-1">Password must be at least 6 characters</p>
+                      )}
                     </div>
                   </div>
                   
@@ -374,9 +415,23 @@ const CreateCompanyDialog: React.FC<CreateCompanyDialogProps> = ({ isOpen, onClo
                       name="phone"
                       type="tel"
                       value={formData.admin?.phone || ''}
-                      onChange={handleAdminChange}
-                      placeholder="+1234567890"
+                      onChange={(e) => {
+                        // Only allow digits, max 10
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          admin: {
+                            ...prev.admin!,
+                            phone: value
+                          }
+                        }));
+                      }}
+                      maxLength={10}
+                      placeholder="10 digit number (e.g., 9356150561)"
                     />
+                    {formData.admin?.phone && !validatePhoneNumber(formData.admin.phone) && (
+                      <p className="text-xs text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                    )}
                   </div>
                 </div>
               )}

@@ -191,14 +191,29 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
 
-    console.log('🔐 Login attempt for:', phone || email);
+    // Validate password length
+    if (password && password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters'
+      });
+    }
+
+    // Normalize phone number if provided (add 91 prefix if 10 digits)
+    let normalizedPhone = phone;
+    if (phone) {
+      const { normalizePhoneNumber } = await import('../utils/phoneUtils');
+      normalizedPhone = normalizePhoneNumber(phone);
+    }
+
+    console.log('🔐 Login attempt for:', normalizedPhone || email);
 
     // Find user by phone or email (exclude soft-deleted)
     const query: any = { isDeleted: false };
     if (email) {
       query.email = email;
     } else {
-      query.phone = phone;
+      query.phone = normalizedPhone;
     }
 
     const user = await User.findOne(query).select('+password'); // IMPORTANT
