@@ -44,7 +44,7 @@ const AppointmentSchema: Schema = new Schema(
   {
     appointmentId: {
       type: String,
-      required: true,
+      required: false, // Set by pre-save hook, not required on input
       unique: true,
       index: true
     },
