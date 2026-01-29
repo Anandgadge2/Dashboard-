@@ -12,6 +12,10 @@ import { findDepartmentByCategory, getAvailableCategories } from './departmentMa
 import { notifyDepartmentAdminOnCreation } from './notificationService';
 import { uploadWhatsAppMediaToCloudinary } from './mediaService';
 import { getSession, updateSession, clearSession, UserSession } from './sessionService';
+
+/** India timezone (IST) for consistent date/time display to citizens */
+const IST_TIMEZONE = 'Asia/Kolkata';
+
 // Note: ID generation is handled by pre-save hooks in Grievance and Appointment models
 
 export interface ChatbotMessage {
@@ -1555,7 +1559,7 @@ async function continueAppointmentFlow(
         
         if (isAvailable) {
           const locale = session.language === 'en' ? 'en-IN' : session.language === 'hi' ? 'hi-IN' : 'mr-IN';
-          const dateStr = date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+          const dateStr = date.toLocaleDateString(locale, { timeZone: IST_TIMEZONE, weekday: 'short', day: 'numeric', month: 'short' });
           dateButtons.push({
             id: `date_${date.toISOString().split('T')[0]}`,
             title: dateStr
@@ -1653,6 +1657,7 @@ async function continueAppointmentFlow(
       // Show confirmation
       const confirmDate = new Date(session.data.appointmentDate);
       const dateDisplay = confirmDate.toLocaleDateString(session.language === 'en' ? 'en-IN' : session.language === 'hi' ? 'hi-IN' : 'mr-IN', { 
+        timeZone: IST_TIMEZONE,
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
@@ -1738,6 +1743,7 @@ async function continueAppointmentFlow(
         console.log('⚠️ Invalid confirmation input, asking again');
         const confirmDate = new Date(session.data.appointmentDate);
         const dateDisplay = confirmDate.toLocaleDateString(session.language === 'en' ? 'en-IN' : session.language === 'hi' ? 'hi-IN' : 'mr-IN', { 
+          timeZone: IST_TIMEZONE,
           weekday: 'long', 
           year: 'numeric', 
           month: 'long', 
@@ -1833,7 +1839,7 @@ async function createAppointment(
       departmentId: undefined, // No department for CEO
       companyId: company._id,
       purpose: session.data.purpose,
-      location: `${new Date(appointmentDate).toLocaleDateString('en-IN')} at ${appointmentTime}`,
+      location: `${new Date(appointmentDate).toLocaleDateString('en-IN', { timeZone: IST_TIMEZONE })} at ${appointmentTime}`,
       appointmentDate: appointment.appointmentDate,
       appointmentTime: appointment.appointmentTime,
       createdAt: appointment.createdAt,
@@ -1841,6 +1847,7 @@ async function createAppointment(
     });
     
     const dateDisplay = appointmentDate.toLocaleDateString(session.language === 'en' ? 'en-IN' : session.language === 'hi' ? 'hi-IN' : 'mr-IN', { 
+      timeZone: IST_TIMEZONE,
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
@@ -1981,7 +1988,7 @@ async function handleStatusTracking(
       company,
       message.from,
       `📌 *${getTranslation('header_grv_status', session.language)}*\n\n` +
-      `*${getTranslation('label_date', session.language)}:* ${new Date(grievance.createdAt).toLocaleDateString('en-IN')}\n` +
+      `*${getTranslation('label_date', session.language)}:* ${new Date(grievance.createdAt).toLocaleDateString('en-IN', { timeZone: IST_TIMEZONE })}\n` +
       `*${getTranslation('label_ref_no', session.language)}:* \`${grievance.grievanceId}\`\n\n` +
       `*${getTranslation('label_department', session.language)}:* ${deptName}\n` +
       `*${getTranslation('label_category', session.language)}:* ${translatedCategory}\n` +
@@ -2008,7 +2015,7 @@ async function handleStatusTracking(
       company,
       message.from,
       `🗓️ *${getTranslation('header_apt_status', session.language)}*\n\n` +
-      `*${getTranslation('label_date', session.language)}:* ${new Date(appointment.appointmentDate).toLocaleDateString('en-IN')}\n` +
+      `*${getTranslation('label_date', session.language)}:* ${new Date(appointment.appointmentDate).toLocaleDateString('en-IN', { timeZone: IST_TIMEZONE })}\n` +
       `*${getTranslation('label_time', session.language)}:* ${appointment.appointmentTime}\n` +
       `*${getTranslation('label_ref_no', session.language)}:* \`${appointment.appointmentId}\`\n\n` +
       `*${getTranslation('label_department', session.language)}:* ${deptName}\n` +

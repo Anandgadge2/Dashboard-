@@ -20,6 +20,7 @@
     "ensure:superadmin": "ts-node src/scripts/ensureSuperAdmin.ts",
     "seed:zpamaravati": "ts-node src/scripts/seedZPAmaravati.ts",
     "seed:zpamaravati:data": "ts-node src/scripts/seedZPAmaravatiData.ts",
+    "seed:zpamravati-full": "ts-node src/scripts/seedZillaParishadAmravati.ts",
     "fix:zpadmin": "ts-node src/scripts/fixZPAdminPassword.ts",
     "fix:phone-id": "ts-node src/scripts/fixPhoneNumberId.ts",
     "seed:departments": "ts-node src/scripts/seedDepartments.ts",

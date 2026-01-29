@@ -377,6 +377,36 @@ interface NotificationData {
 /* Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
+/** India timezone (IST) for consistent display in WhatsApp/email notifications */
+const IST_TIMEZONE = 'Asia/Kolkata';
+
+function formatDateTimeIST(date: Date | string | undefined, options?: Intl.DateTimeFormatOptions): string {
+  if (!date) return 'N/A';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleString('en-IN', {
+    timeZone: IST_TIMEZONE,
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    ...options
+  });
+}
+
+function formatDateIST(date: Date | string | undefined, options?: Intl.DateTimeFormatOptions): string {
+  if (!date) return 'N/A';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('en-IN', {
+    timeZone: IST_TIMEZONE,
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    ...options
+  });
+}
+
 function isWhatsAppEnabled(company: any): boolean {
   // Check company config first
   const hasCompanyConfig = Boolean(
@@ -502,14 +532,7 @@ export async function notifyDepartmentAdminOnCreation(
       // Notify all Company Admins
       for (const admin of companyAdmins) {
         const createdAt = data.createdAt || new Date();
-        const formattedDate = new Date(createdAt).toLocaleString('en-IN', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
+        const formattedDate = formatDateTimeIST(createdAt);
 
         const message =
           `*${company.name}*\n` +
@@ -523,7 +546,7 @@ export async function notifyDepartmentAdminOnCreation(
           `📞 *Contact Number:* ${data.citizenPhone}\n` +
           `🏢 *Department:* CEO - Zilla Parishad Amravati\n` +
           `📝 *Purpose:* ${data.purpose}\n` +
-          `📅 *Requested Date:* ${data.appointmentDate ? new Date(data.appointmentDate).toLocaleDateString('en-IN') : 'N/A'}\n` +
+          `📅 *Requested Date:* ${data.appointmentDate ? formatDateIST(data.appointmentDate) : 'N/A'}\n` +
           `⏰ *Requested Time:* ${data.appointmentTime || 'N/A'}\n` +
           `📅 *Received On:* ${formattedDate}\n\n` +
           `*Action Required:*\n` +
@@ -571,14 +594,7 @@ export async function notifyDepartmentAdminOnCreation(
     if (!admin) return;
 
     const createdAt = data.createdAt || new Date();
-    const formattedDate = new Date(createdAt).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    const formattedDate = formatDateTimeIST(createdAt);
 
     const notificationData = {
       companyName: company.name,
@@ -670,14 +686,7 @@ export async function notifyUserOnAssignment(
 
     const assignedByName = data.assignedByName || 'Administrator';
     const assignedAt = data.assignedAt || new Date();
-    const formattedDate = new Date(assignedAt).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    const formattedDate = formatDateTimeIST(assignedAt);
 
     const emailData = {
       companyName: company.name,
@@ -773,14 +782,7 @@ export async function notifyCitizenOnResolution(
     }
 
     const resolvedAt = data.resolvedAt || new Date();
-    const formattedResolvedDate = new Date(resolvedAt).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    const formattedResolvedDate = formatDateTimeIST(resolvedAt);
 
     const createdAt = data.createdAt;
     let resolutionTimeText = '';
@@ -850,8 +852,8 @@ export async function notifyCitizenOnResolution(
       `👨‍💼 *Resolved By:* ${resolvedByName}\n` +
       `📅 *Resolved On:* ${formattedResolvedDate}${resolutionTimeTextFormatted}${remarksText}` +
       `\n*Timeline Summary:*\n` +
-      `${data.createdAt ? `📝 Created: ${new Date(data.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}\n` : ''}` +
-      `${data.assignedAt ? `👤 Assigned: ${new Date(data.assignedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}\n` : ''}` +
+      `${data.createdAt ? `📝 Created: ${formatDateTimeIST(data.createdAt, { month: 'short' })}\n` : ''}` +
+      `${data.assignedAt ? `👤 Assigned: ${formatDateTimeIST(data.assignedAt, { month: 'short' })}\n` : ''}` +
       `✅ Resolved: ${formattedResolvedDate}\n\n` +
       `Thank you for using our digital portal. We hope this resolves your concern satisfactorily. If you have any further queries, please feel free to contact us.\n\n` +
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -908,14 +910,7 @@ export async function notifyHierarchyOnStatusChange(
     });
 
     const resolvedAt = data.resolvedAt || new Date();
-    const formattedResolvedDate = new Date(resolvedAt).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    const formattedResolvedDate = formatDateTimeIST(resolvedAt);
 
     const createdAt = data.createdAt;
     let resolutionTimeText = '';
@@ -958,8 +953,8 @@ export async function notifyHierarchyOnStatusChange(
       `👨‍💼 *Resolved By:* ${resolvedByName}\n` +
       `📅 *Resolved On:* ${formattedResolvedDate}${resolutionTimeTextFormatted}${remarksText}` +
       `\n*Processing Timeline:*\n` +
-      `${data.createdAt ? `📝 Created: ${new Date(data.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}\n` : ''}` +
-      `${data.assignedAt ? `👤 Assigned: ${new Date(data.assignedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}\n` : ''}` +
+      `${data.createdAt ? `📝 Created: ${formatDateTimeIST(data.createdAt, { month: 'short' })}\n` : ''}` +
+      `${data.assignedAt ? `👤 Assigned: ${formatDateTimeIST(data.assignedAt, { month: 'short' })}\n` : ''}` +
       `✅ Resolved: ${formattedResolvedDate}\n\n` +
       `The citizen has been notified of the resolution. This notification is for your information and records.\n\n` +
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -1036,7 +1031,7 @@ export async function notifyCitizenOnAppointmentStatusChange(data: {
     
     // Format date and time
     const appointmentDate = new Date(data.appointmentDate);
-    const dateDisplay = appointmentDate.toLocaleDateString('en-IN', {
+    const dateDisplay = formatDateIST(appointmentDate, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

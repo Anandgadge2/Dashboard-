@@ -17,7 +17,10 @@ router.use(authenticate);
 // @access  Private
 router.get('/', requirePermission(Permission.READ_DEPARTMENT), async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, search, companyId } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limitParam = req.query.limit !== undefined ? Number(req.query.limit) : 0;
+    const limit = limitParam > 0 ? limitParam : 0; // 0 = no limit
+    const { search, companyId } = req.query;
     const user = req.user!;
 
     const query: any = {};
@@ -35,7 +38,7 @@ router.get('/', requirePermission(Permission.READ_DEPARTMENT), async (req: Reque
           success: true,
           data: {
             departments: [],
-            pagination: { page: 1, limit: 20, total: 0, pages: 0 }
+            pagination: { page: 1, limit: 100, total: 0, pages: 0 }
           }
         });
         return;
@@ -52,23 +55,24 @@ router.get('/', requirePermission(Permission.READ_DEPARTMENT), async (req: Reque
       ];
     }
 
-    const departments = await Department.find(query)
-      .populate('companyId', 'name companyId')
-      .limit(Number(limit))
-      .skip((Number(page) - 1) * Number(limit))
-      .sort({ createdAt: -1 });
-
     const total = await Department.countDocuments(query);
+    let q = Department.find(query)
+      .populate('companyId', 'name companyId')
+      .sort({ createdAt: -1 });
+    if (limit > 0) {
+      q = q.limit(limit).skip((page - 1) * limit);
+    }
+    const departments = await q;
 
     res.json({
       success: true,
       data: {
         departments,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page,
+          limit: limit || total,
           total,
-          pages: Math.ceil(total / Number(limit))
+          pages: limit > 0 ? Math.ceil(total / limit) : 1
         }
       }
     });

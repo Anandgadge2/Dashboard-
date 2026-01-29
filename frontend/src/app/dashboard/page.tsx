@@ -480,7 +480,7 @@ function DashboardContent() {
   const fetchDepartments = async () => {
     setLoadingDepartments(true);
     try {
-      const response = await departmentAPI.getAll();
+      const response = await departmentAPI.getAll(); // no limit = return all
       if (response.success) {
         let filteredDepartments = response.data.departments;
         
@@ -510,7 +510,7 @@ function DashboardContent() {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await userAPI.getAll();
+      const response = await userAPI.getAll(); // no limit = return all
       if (response.success) {
         let filteredUsers = response.data.users;
         
@@ -541,7 +541,7 @@ function DashboardContent() {
   const fetchGrievances = async () => {
     setLoadingGrievances(true);
     try {
-      const response = await grievanceAPI.getAll({ limit: 100 });
+      const response = await grievanceAPI.getAll(); // no limit = return all
       if (response.success) {
         // Include all grievances - filtering will be handled by the filter state
         setGrievances(response.data.grievances);
@@ -557,7 +557,7 @@ function DashboardContent() {
   const fetchAppointments = async () => {
     setLoadingAppointments(true);
     try {
-      const response = await appointmentAPI.getAll({ limit: 50 });
+      const response = await appointmentAPI.getAll(); // no limit = return all
       if (response.success) {
         setAppointments(response.data.appointments);
       }

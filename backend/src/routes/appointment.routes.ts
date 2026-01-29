@@ -18,7 +18,10 @@ router.use(authenticate);
 // @access  Private
 router.get('/', requirePermission(Permission.READ_APPOINTMENT), async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, status, departmentId, assignedTo, date } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limitParam = req.query.limit !== undefined ? Number(req.query.limit) : 0;
+    const limit = limitParam > 0 ? limitParam : 0; // 0 = no limit
+    const { status, departmentId, assignedTo, date } = req.query;
     const currentUser = req.user!;
 
     const query: any = {};
@@ -46,7 +49,7 @@ router.get('/', requirePermission(Permission.READ_APPOINTMENT), async (req: Requ
           success: true,
           data: {
             appointments: [],
-            pagination: { page: 1, limit: Number(limit), total: 0, pages: 0 }
+            pagination: { page: 1, limit: 0, total: 0, pages: 1 }
           }
         });
         return;
@@ -69,25 +72,26 @@ router.get('/', requirePermission(Permission.READ_APPOINTMENT), async (req: Requ
     // Exclude soft-deleted appointments
     query.isDeleted = { $ne: true };
 
-    const appointments = await Appointment.find(query)
+    const total = await Appointment.countDocuments(query);
+    let q = Appointment.find(query)
       .populate('companyId', 'name companyId')
       .populate('departmentId', 'name departmentId')
       .populate('assignedTo', 'firstName lastName email')
-      .limit(Number(limit))
-      .skip((Number(page) - 1) * Number(limit))
       .sort({ createdAt: -1, appointmentDate: 1, appointmentTime: 1 }); // Newest first
-
-    const total = await Appointment.countDocuments(query);
+    if (limit > 0) {
+      q = q.limit(limit).skip((page - 1) * limit);
+    }
+    const appointments = await q;
 
     res.json({
       success: true,
       data: {
         appointments,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page,
+          limit: limit || total,
           total,
-          pages: Math.ceil(total / Number(limit))
+          pages: limit > 0 ? Math.ceil(total / limit) : 1
         }
       }
     });

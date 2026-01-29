@@ -146,13 +146,17 @@ export async function testEmailConfiguration(): Promise<{ success: boolean; erro
   }
 }
 
+/** India timezone for consistent display in emails/notifications */
+const IST_TIMEZONE = 'Asia/Kolkata';
+
 /**
- * Format date and time in a readable format
+ * Format date and time in a readable format (IST)
  */
 function formatDateTime(date: Date | string | undefined): string {
   if (!date) return 'N/A';
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleString('en-IN', {
+    timeZone: IST_TIMEZONE,
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -163,12 +167,13 @@ function formatDateTime(date: Date | string | undefined): string {
 }
 
 /**
- * Format date in a readable format
+ * Format date in a readable format (IST)
  */
 function formatDate(date: Date | string | undefined): string {
   if (!date) return 'N/A';
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('en-IN', {
+    timeZone: IST_TIMEZONE,
     day: '2-digit',
     month: 'long',
     year: 'numeric'

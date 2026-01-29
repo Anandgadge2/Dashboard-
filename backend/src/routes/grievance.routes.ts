@@ -18,7 +18,10 @@ router.use(authenticate);
 // @access  Private
 router.get('/', requirePermission(Permission.READ_GRIEVANCE), async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, status, departmentId, assignedTo, priority } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limitParam = req.query.limit !== undefined ? Number(req.query.limit) : 0;
+    const limit = limitParam > 0 ? limitParam : 0; // 0 = no limit
+    const { status, departmentId, assignedTo, priority } = req.query;
     const currentUser = req.user!;
 
     const query: any = {};
@@ -43,25 +46,26 @@ router.get('/', requirePermission(Permission.READ_GRIEVANCE), async (req: Reques
     if (assignedTo) query.assignedTo = assignedTo;
     if (priority) query.priority = priority;
 
-    const grievances = await Grievance.find(query)
+    const total = await Grievance.countDocuments(query);
+    let q = Grievance.find(query)
       .populate('companyId', 'name companyId')
       .populate('departmentId', 'name departmentId')
       .populate('assignedTo', 'firstName lastName email')
-      .limit(Number(limit))
-      .skip((Number(page) - 1) * Number(limit))
       .sort({ createdAt: -1 });
-
-    const total = await Grievance.countDocuments(query);
+    if (limit > 0) {
+      q = q.limit(limit).skip((page - 1) * limit);
+    }
+    const grievances = await q;
 
     res.json({
       success: true,
       data: {
         grievances,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page,
+          limit: limit || total,
           total,
-          pages: Math.ceil(total / Number(limit))
+          pages: limit > 0 ? Math.ceil(total / limit) : 1
         }
       }
     });
