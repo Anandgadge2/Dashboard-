@@ -655,13 +655,14 @@ async function showMainMenu(session: UserSession, message: ChatbotMessage, compa
     buttons.push({ id: 'appointment', title: getTranslation('menu_appointment', session.language) });
   }
   
-  if (company.enabledModules.includes('RTS')) {
-    buttons.push({ id: 'rts', title: getTranslation('menu_rts', session.language) });
-  }
-  
   if (buttons.length > 0) {
     buttons.push({ id: 'track', title: getTranslation('menu_track', session.language) });
   }
+
+  if (company.enabledModules.includes('RTS')) {
+    buttons.push({ id: 'rts', title: getTranslation('menu_rts', session.language) });
+  }
+ 
 
   buttons.push({ id: 'help', title: getTranslation('menu_help', session.language) });
 
