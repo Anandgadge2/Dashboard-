@@ -1,44 +1,33 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 const jwt = require("jsonwebtoken");
 
-const SSO_SECRET = process.env.SSO_SECRET || "my-super-secret-sso-key-2026";
+// Backend verifies SSO token with JWT_SECRET - must use same secret
+const secret = process.env.JWT_SECRET;
+if (!secret) {
+  console.error("❌ JWT_SECRET is not set in .env. Set it to generate valid SSO tokens.");
+  process.exit(1);
+}
 
-// This is what the MAIN DASHBOARD will send in the JWT token
-const ssoPayload = {
-  phone: "9356150561", // Replace with actual user phone
-};
+// Phone(s): from CLI arg or default to direct-SSO numbers
+const phones = process.argv.slice(2).length
+  ? process.argv.slice(2)
+  : ["9021550841", "5555555555"];
 
-// Generate the SSO token
-const ssoToken = jwt.sign(ssoPayload, SSO_SECRET);
-
-// Decode to show what's inside
-const decoded = jwt.decode(ssoToken);
+const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
 console.log("\n╔════════════════════════════════════════════════════════════╗");
-console.log("║          SSO TOKEN GENERATOR - MAIN DASHBOARD             ║");
+console.log("║          SSO TOKEN GENERATOR - DIRECT LOGIN LINKS          ║");
 console.log("╚════════════════════════════════════════════════════════════╝\n");
 
-console.log("📋 Token Payload (what the main dashboard encodes):");
-console.log(JSON.stringify(ssoPayload, null, 2));
+for (const phone of phones) {
+  const payload = { phone: String(phone).replace(/\D/g, '').slice(-10), source: "MAIN_DASHBOARD" };
+  const token = jwt.sign(payload, secret, { expiresIn: "7d" });
+  const url = `${baseUrl.replace(/\/$/, "")}/auth/sso?token=${token}`;
+  console.log(`📱 Phone: ${payload.phone}`);
+  console.log(`🔐 Token: ${token}`);
+  console.log(`🌐 Direct login URL:\n   ${url}\n`);
+}
 
-console.log("\n🔐 Generated SSO Token:");
-console.log(ssoToken);
-
-console.log("\n🔍 Decoded Token (for verification):");
-console.log(JSON.stringify(decoded, null, 2));
-
-console.log("\n🌐 Test URL for Auto-Login:");
-console.log(`http://localhost:3000/auth/sso?token=${ssoToken}`);
-
-console.log("\n📝 How it works:");
-console.log("1. Main dashboard generates JWT token with user phone");
-console.log(
-  "2. Main dashboard redirects to: http://localhost:3000/auth/sso?token=JWT_TOKEN"
-);
-console.log("3. This dashboard receives the token");
-console.log("4. Backend decodes the token using SSO_SECRET");
-console.log("5. Backend finds user by phone number");
-console.log("6. Backend generates new access/refresh tokens");
-console.log("7. User is automatically logged in!");
-
-console.log("\n✅ Both dashboards must share the same SSO_SECRET!\n");
+console.log("Usage: node generate-sso-token.js [phone1] [phone2] ...");
+console.log("Example: node generate-sso-token.js 9021550841 5555555555");
+console.log("(With no args, generates links for 9021550841 and 5555555555.)\n");

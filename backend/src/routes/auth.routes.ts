@@ -75,7 +75,7 @@ router.post('/sso/login', async (req: Request, res: Response) => {
     // }
 
     // STEP 3: Extract phone from verified token (NOT from request body)
-    const { phone } = decoded;
+    let phone = decoded.phone;
     
     if (!phone) {
       console.error('❌ No phone number in SSO token payload');
@@ -86,13 +86,17 @@ router.post('/sso/login', async (req: Request, res: Response) => {
       return;
     }
 
-    console.log('📱 SSO Login for verified phone:', phone);
+    // Normalize phone to match DB format (91 + 10 digits) - token may have 10-digit or 91-prefix
+    const { normalizePhoneNumber } = await import('../utils/phoneUtils');
+    const phoneForLookup = normalizePhoneNumber(String(phone).trim());
 
-    // STEP 4: Find user in database
-    const user = await User.findOne({ 
-      phone,
-      isDeleted: false 
-    });
+    console.log('📱 SSO Login for verified phone:', phone, '→ lookup:', phoneForLookup);
+
+    // STEP 4: Find user in database (by normalized phone; fallback to raw if needed)
+    let user = await User.findOne({ phone: phoneForLookup, isDeleted: false });
+    if (!user && phoneForLookup !== String(phone).trim()) {
+      user = await User.findOne({ phone, isDeleted: false });
+    }
 
     if (!user) {
       console.log('❌ User not found for phone:', phone);

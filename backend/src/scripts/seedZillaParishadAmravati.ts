@@ -291,11 +291,28 @@ const seedZillaParishadAmravati = async () => {
       });
     }
 
+    // ----- 6. COMPANY ADMINS (Direct SSO) – Sanjita Mahapatra (I.A.S.) for ZP Amravati -----
+    console.log('\n🔗 Company Admin (Direct SSO): Sanjita Mahapatra (I.A.S.)');
+    await ensureUser({
+      firstName: 'Sanjita',
+      lastName: 'Mahapatra (I.A.S.)',
+      email: 'sanjita.9021550841@zpamravati.org',
+      phone: '9021550841',
+      role: UserRole.COMPANY_ADMIN,
+    });
+    await ensureUser({
+      firstName: 'Sanjita',
+      lastName: 'Mahapatra (I.A.S.)',
+      email: 'sanjita.5555555555@zpamravati.org',
+      phone: '5555555555',
+      role: UserRole.COMPANY_ADMIN,
+    });
+
     console.log('\n🎉 Zilla Parishad Amravati seed completed.\n');
     console.log('📋 Summary:');
     console.log(`   Company: Zilla Parishad Amravati`);
     console.log(`   Departments: ${Object.keys(deptNameToId).length} (16 district + 13 Panchayat Samiti)`);
-    console.log(`   Company Admins: 2`);
+    console.log(`   Company Admins: 4 (incl. Sanjita Mahapatra I.A.S. for 9021550841, 5555555555)`);
     console.log(`   Department Admins: ${deptAdmins.length}`);
     console.log(`   Operators (BDOs): ${operators.length}`);
     console.log(`\n🔐 Default password for all seeded users: ${DEFAULT_PASSWORD}`);
@@ -303,6 +320,7 @@ const seedZillaParishadAmravati = async () => {
     console.log('   SuperAdmin: superadmin@platform.com (or phone: 919999999999)');
     console.log('   Company Admin: ceozp.amravati@maharashtra.gov.in');
     console.log('   Company Admin: addceozpamt@gmail.com');
+    console.log('   Company Admin (Sanjita Mahapatra I.A.S.): 9021550841, 5555555555');
     console.log('   Dept Admin (DRDA): amravatidrda@gmail.com');
     console.log('   Operator (PS Amravati): bdopsamravati@gmail.com');
   } catch (error) {
