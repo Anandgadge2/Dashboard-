@@ -822,12 +822,12 @@ function DashboardContent() {
           }
           setActiveTab(value);
         }} className="space-y-4 sm:space-y-6">
-          <TabsList className="flex h-auto w-full flex-wrap items-center justify-start sm:justify-center rounded-2xl bg-white/80 backdrop-blur-sm p-1 shadow-lg border border-slate-200/50 gap-1 overflow-x-auto no-scrollbar">
+          <TabsList className="flex h-auto w-full flex-wrap items-center justify-start sm:justify-center lg:justify-between rounded-2xl bg-white/80 backdrop-blur-sm p-2 shadow-lg border border-slate-200/50 gap-1 sm:gap-4 lg:gap-8 overflow-x-auto no-scrollbar">
             {/* Hide Overview tab for operators - they should only see assigned items */}
             {!isOperator && (
               <TabsTrigger 
                 value="overview" 
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
+                className="px-4 sm:px-6 lg:px-10 py-2 sm:py-2.5 lg:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Overview
               </TabsTrigger>
@@ -835,7 +835,7 @@ function DashboardContent() {
             {user && hasPermission(user.role, Permission.READ_GRIEVANCE) && (
               <TabsTrigger 
                 value="grievances"
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
+                className="px-4 sm:px-6 lg:px-10 py-2 sm:py-2.5 lg:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Grievances
               </TabsTrigger>
@@ -844,7 +844,7 @@ function DashboardContent() {
             {isCompanyAdmin && (
               <TabsTrigger 
                 value="appointments"
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
+                className="px-4 sm:px-6 lg:px-10 py-2 sm:py-2.5 lg:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Appointments
               </TabsTrigger>
@@ -853,7 +853,7 @@ function DashboardContent() {
             {isCompanyAdmin && (
               <TabsTrigger 
                 value="departments"
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
+                className="px-4 sm:px-6 lg:px-10 py-2 sm:py-2.5 lg:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Departments
               </TabsTrigger>
@@ -861,7 +861,7 @@ function DashboardContent() {
             {(isCompanyAdmin || isDepartmentAdmin) && (
               <TabsTrigger 
                 value="users"
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
+                className="px-4 sm:px-6 lg:px-10 py-2 sm:py-2.5 lg:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Users
               </TabsTrigger>
@@ -869,7 +869,7 @@ function DashboardContent() {
             {!isOperator && !isAnalyticsViewer && (
               <TabsTrigger 
                 value="analytics"
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
+                className="px-4 sm:px-6 lg:px-10 py-2 sm:py-2.5 lg:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Analytics
               </TabsTrigger>
