@@ -781,20 +781,20 @@ function DashboardContent() {
       {/* Header with Gradient */}
       <header className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 sticky top-0 z-50 shadow-xl">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                <Building className="w-6 h-6 text-white" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg flex-shrink-0">
+                <Building className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">
-                  {isCompanyAdmin && 'Zilla Parishad Admin Dashboard'}
-                  {isDepartmentAdmin && 'Department Admin Dashboard'}
+              <div className="min-w-0">
+                <h1 className="text-lg md:text-2xl font-bold text-white tracking-tight truncate">
+                  {isCompanyAdmin && 'ZP Admin Dashboard'}
+                  {isDepartmentAdmin && 'Dept Admin Dashboard'}
                   {isOperator && 'Operator Dashboard'}
                   {isAnalyticsViewer && 'Analytics Dashboard'}
                 </h1>
-                <p className="text-sm text-white/80 mt-0.5">
+                <p className="text-xs md:text-sm text-white/80 mt-0.5 truncate">
                   Welcome back, <span className="font-semibold text-white">{user.firstName} {user.lastName}</span>
                 </p>
               </div>
@@ -802,12 +802,13 @@ function DashboardContent() {
             <Button
               onClick={logout}
               variant="outline"
-              className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm transition-all duration-200"
+              size="sm"
+              className="w-full sm:w-auto border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm transition-all duration-200 rounded-xl h-10 sm:h-auto"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Logout
+              <span>Logout</span>
             </Button>
           </div>
         </div>
@@ -821,12 +822,12 @@ function DashboardContent() {
           }
           setActiveTab(value);
         }} className="space-y-4 sm:space-y-6">
-          <TabsList className="inline-flex h-auto sm:h-12 flex-wrap sm:flex-nowrap items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm p-1.5 shadow-lg border border-slate-200/50 gap-1">
+          <TabsList className="flex h-auto w-full flex-wrap items-center justify-start sm:justify-center rounded-2xl bg-white/80 backdrop-blur-sm p-1 shadow-lg border border-slate-200/50 gap-1 overflow-x-auto no-scrollbar">
             {/* Hide Overview tab for operators - they should only see assigned items */}
             {!isOperator && (
               <TabsTrigger 
                 value="overview" 
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Overview
               </TabsTrigger>
@@ -834,7 +835,7 @@ function DashboardContent() {
             {user && hasPermission(user.role, Permission.READ_GRIEVANCE) && (
               <TabsTrigger 
                 value="grievances"
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Grievances
               </TabsTrigger>
@@ -843,7 +844,7 @@ function DashboardContent() {
             {isCompanyAdmin && (
               <TabsTrigger 
                 value="appointments"
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Appointments
               </TabsTrigger>
@@ -852,7 +853,7 @@ function DashboardContent() {
             {isCompanyAdmin && (
               <TabsTrigger 
                 value="departments"
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Departments
               </TabsTrigger>
@@ -860,7 +861,7 @@ function DashboardContent() {
             {(isCompanyAdmin || isDepartmentAdmin) && (
               <TabsTrigger 
                 value="users"
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Users
               </TabsTrigger>
@@ -868,7 +869,7 @@ function DashboardContent() {
             {!isOperator && !isAnalyticsViewer && (
               <TabsTrigger 
                 value="analytics"
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
               >
                 Analytics
               </TabsTrigger>
@@ -877,19 +878,13 @@ function DashboardContent() {
               <>
                 <TabsTrigger 
                   value="profile"
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
                 >
                   Profile
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="grievances"
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
-                >
-                  Grievances
-                </TabsTrigger>
-                <TabsTrigger 
                   value="my-analytics"
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
                 >
                   My Analytics
                 </TabsTrigger>
@@ -900,13 +895,13 @@ function DashboardContent() {
               <>
                 <TabsTrigger 
                   value="grievances"
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
                 >
                   Grievances
                 </TabsTrigger>
                 <TabsTrigger 
                   value="analytics"
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100"
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:bg-slate-100 flex-1 sm:flex-none"
                 >
                   Analytics
                 </TabsTrigger>
@@ -2006,26 +2001,26 @@ function DashboardContent() {
               </Button>
             )}
             <Card className="rounded-2xl border-0 shadow-xl overflow-hidden bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <CardHeader className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-white">
-                        {grievanceFilters.status === 'RESOLVED' ? 'Resolved Grievances' : grievanceFilters.status === 'CLOSED' ? 'Closed Grievances' : 'Active Grievances'}
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-white truncate">
+                        {grievanceFilters.status === 'RESOLVED' ? 'Resolved ' : grievanceFilters.status === 'CLOSED' ? 'Closed ' : 'Active '}Grievances
                       </CardTitle>
-                      <CardDescription className="text-white/80 mt-0.5">
-                        {grievanceFilters.status === 'RESOLVED' ? 'View all resolved grievances' : grievanceFilters.status === 'CLOSED' ? 'View all closed grievances' : 'View and manage pending and in-progress grievances'}
+                      <CardDescription className="text-white/80 mt-0.5 text-xs sm:text-sm truncate">
+                        {grievanceFilters.status === 'RESOLVED' ? 'View all resolved' : grievanceFilters.status === 'CLOSED' ? 'View all closed' : 'Pending & in-progress'}
                       </CardDescription>
                     </div>
                   </div>
                   <Link 
                     href="/resolved-grievances"
-                    className="flex items-center gap-2 px-5 py-2.5 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all duration-200 backdrop-blur-sm text-sm font-medium border border-white/30"
+                    className="flex justify-center items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all duration-200 backdrop-blur-sm text-sm font-medium border border-white/30 w-full sm:w-auto"
                   >
                     <CheckCircle className="w-4 h-4" />
                     View Resolved
@@ -2036,24 +2031,24 @@ function DashboardContent() {
               {/* Grievance Filters */}
               <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-indigo-50/30 border-b border-slate-200">
                 {/* Search and Actions Bar */}
-                <div className="flex items-center justify-between gap-4 mb-3">
-                  <div className="relative flex-1 max-w-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div className="relative w-full sm:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search by ID, name, phone, or category..."
+                      placeholder="Search grievances..."
                       value={grievanceSearch}
                       onChange={(e) => setGrievanceSearch(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm text-sm placeholder:text-slate-400"
                     />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleRefreshData}
                       disabled={isRefreshing}
-                      className="border-slate-200 hover:bg-slate-50 rounded-xl"
+                      className="border-slate-200 hover:bg-slate-50 rounded-xl flex-1 sm:flex-none"
                       title="Refresh data"
                     >
                       <RefreshCw className={`w-4 h-4 mr-1.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -2074,7 +2069,7 @@ function DashboardContent() {
                           { key: 'createdAt', label: 'Created At' }
                         ]
                       )}
-                      className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl"
+                      className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl flex-1 sm:flex-none"
                       title="Export to CSV"
                     >
                       <FileDown className="w-4 h-4 mr-1.5" />
@@ -2084,94 +2079,77 @@ function DashboardContent() {
                 </div>
 
                 {/* Filters Row */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-slate-200">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-200 flex-shrink-0">
                     <Filter className="w-4 h-4 text-indigo-500" />
-                    <span className="text-sm font-semibold text-slate-700">Filters</span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-700">Filters</span>
                   </div>
                   
-                  {/* Status Filter */}
-                  <select
-                    value={grievanceFilters.status}
-                    onChange={(e) => setGrievanceFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm hover:border-indigo-300 transition-colors cursor-pointer"
-                    title="Filter by grievance status"
-                  >
-                    <option value="">📋 All Status</option>
-                    <option value="PENDING">🔸 Pending</option>
-                    <option value="ASSIGNED">👤 Assigned</option>
-                    <option value="RESOLVED">✅ Resolved</option>
-                    <option value="CLOSED">🔒 Closed</option>
-                  </select>
-
-                  {/* Department Filter */}
-                  <select
-                    value={grievanceFilters.department}
-                    onChange={(e) => setGrievanceFilters(prev => ({ ...prev, department: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm hover:border-indigo-300 transition-colors cursor-pointer"
-                    title="Filter by department"
-                  >
-                    <option value="">🏢 All Departments</option>
-                    {departments.map((dept) => (
-                      <option key={dept._id} value={dept._id}>{dept.name}</option>
-                    ))}
-                  </select>
-
-                  {/* Assignment Status Filter */}
-                  <select
-                    value={grievanceFilters.assignmentStatus}
-                    onChange={(e) => setGrievanceFilters(prev => ({ ...prev, assignmentStatus: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm hover:border-indigo-300 transition-colors cursor-pointer"
-                    title="Filter by assignment status"
-                  >
-                    <option value="">👥 All Assignments</option>
-                    <option value="assigned">✓ Assigned</option>
-                    <option value="unassigned">○ Unassigned</option>
-                  </select>
-
-                  {/* Overdue Status Filter */}
-                  <select
-                    value={grievanceFilters.overdueStatus}
-                    onChange={(e) => setGrievanceFilters(prev => ({ ...prev, overdueStatus: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm hover:border-indigo-300 transition-colors cursor-pointer"
-                    title="Filter by overdue status"
-                  >
-                    <option value="">⏱️ All Overdue Status</option>
-                    <option value="overdue">🔴 Overdue</option>
-                    <option value="ontrack">🟢 On Track</option>
-                  </select>
-
-                  {/* Date Range Filter */}
-                  <select
-                    value={grievanceFilters.dateRange}
-                    onChange={(e) => setGrievanceFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm hover:border-indigo-300 transition-colors cursor-pointer"
-                    title="Filter by date range"
-                  >
-                    <option value="">📅 All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">Last 7 Days</option>
-                    <option value="month">Last 30 Days</option>
-                  </select>
-
-                  {/* Clear Filters */}
-                  {(grievanceFilters.status || grievanceFilters.department || grievanceFilters.assignmentStatus || grievanceFilters.overdueStatus || grievanceFilters.dateRange) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setGrievanceFilters({ status: '', department: '', assignmentStatus: '', overdueStatus: '', dateRange: '' })}
-                      className="text-xs h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200"
-                      title="Clear all filters"
+                  {/* Filter Selects Grid-like on very small mobile */}
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <select
+                      value={grievanceFilters.status}
+                      onChange={(e) => setGrievanceFilters(prev => ({ ...prev, status: e.target.value }))}
+                      className="flex-1 sm:flex-none text-[11px] sm:text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm transition-colors cursor-pointer min-w-[100px]"
                     >
-                      <X className="w-3 h-3 mr-1" />
-                      Clear
-                    </Button>
-                  )}
+                      <option value="">📋 Status</option>
+                      <option value="PENDING">🔸 Pending</option>
+                      <option value="ASSIGNED">👤 Assigned</option>
+                      <option value="RESOLVED">✅ Resolved</option>
+                      <option value="CLOSED">🔒 Closed</option>
+                    </select>
 
-                  {/* Results count */}
-                  <span className="text-xs text-slate-500 ml-auto bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">
-                    Showing <span className="font-semibold text-indigo-600">{getSortedData(grievances, 'grievances').length}</span> of {grievances.length} grievances
-                  </span>
+                    <select
+                      value={grievanceFilters.department}
+                      onChange={(e) => setGrievanceFilters(prev => ({ ...prev, department: e.target.value }))}
+                      className="flex-1 sm:flex-none text-[11px] sm:text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm transition-colors cursor-pointer min-w-[120px]"
+                    >
+                      <option value="">🏢 Department</option>
+                      {departments.map((dept) => (
+                        <option key={dept._id} value={dept._id}>{dept.name}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={grievanceFilters.assignmentStatus}
+                      onChange={(e) => setGrievanceFilters(prev => ({ ...prev, assignmentStatus: e.target.value }))}
+                      className="flex-1 sm:flex-none text-[11px] sm:text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm transition-colors cursor-pointer min-w-[110px]"
+                    >
+                      <option value="">👥 Assignment</option>
+                      <option value="assigned">✓ Assigned</option>
+                      <option value="unassigned">○ Unassigned</option>
+                    </select>
+
+                    <select
+                      value={grievanceFilters.dateRange}
+                      onChange={(e) => setGrievanceFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                      className="flex-1 sm:flex-none text-[11px] sm:text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm transition-colors cursor-pointer min-w-[100px]"
+                    >
+                      <option value="">📅 Time</option>
+                      <option value="today">Today</option>
+                      <option value="week">7 Days</option>
+                      <option value="month">30 Days</option>
+                    </select>
+                  </div>
+
+                  {/* Clear and Count Container */}
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-3 mt-1 sm:mt-0">
+                    {(grievanceFilters.status || grievanceFilters.department || grievanceFilters.assignmentStatus || grievanceFilters.overdueStatus || grievanceFilters.dateRange) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setGrievanceFilters({ status: '', department: '', assignmentStatus: '', overdueStatus: '', dateRange: '' })}
+                        className="text-[11px] h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Clear
+                      </Button>
+                    )}
+                    
+                    <span className="text-[10px] sm:text-xs text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 whitespace-nowrap">
+                      Found: <span className="font-bold text-indigo-600">{getSortedData(grievances, 'grievances').length}</span>
+                    </span>
+                  </div>
 
                   {/* Bulk Delete Button (Super Admin only) */}
                   {user?.role === 'SUPER_ADMIN' && selectedGrievances.size > 0 && (
@@ -2180,8 +2158,7 @@ function DashboardContent() {
                       size="sm"
                       onClick={handleBulkDeleteGrievances}
                       disabled={isDeleting}
-                      className="text-xs h-8 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl border border-red-700 shadow-sm"
-                      title={`Delete ${selectedGrievances.size} selected grievance(s)`}
+                      className="text-xs h-9 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm w-full sm:w-auto mt-2 sm:mt-0"
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                       Delete ({selectedGrievances.size})
@@ -2208,7 +2185,7 @@ function DashboardContent() {
                 ) : (
                   <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-lg bg-white">
                     <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-                      <table className="w-full relative border-collapse">
+                      <table className="w-full relative border-collapse min-w-[1000px]">
                         <thead className="sticky top-0 z-20 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 backdrop-blur-sm shadow-sm border-b border-slate-200">
                           <tr className="whitespace-nowrap">
                             {user?.role === 'SUPER_ADMIN' && (
@@ -2284,7 +2261,7 @@ function DashboardContent() {
                                 <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'createdAt' ? 'text-indigo-600' : 'text-indigo-300 group-hover:text-indigo-400'}`} />
                               </button>
                             </th>
-                            <th className="px-4 py-4 text-center text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Actions</th>
+                            <th className="px-4 py-4 text-center text-[11px] font-bold text-indigo-600 uppercase tracking-wider sticky right-0 bg-pink-50/90 backdrop-blur-sm z-10 border-l border-slate-200 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 bg-white">
@@ -2419,7 +2396,7 @@ function DashboardContent() {
                                 <span className="text-[10px] text-gray-400">{new Date(grievance.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                               </div>
                             </td>
-                            <td className="px-4 py-4">
+                            <td className="px-4 py-4 sticky right-0 bg-white group-hover/row:bg-purple-50/80 backdrop-blur-sm z-10 border-l border-slate-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                               <div className="flex items-center justify-center space-x-1">
                                 {/* Hide assign button for operators and for resolved/closed grievances */}
                                 {!isOperator && grievance.status !== 'RESOLVED' && grievance.status !== 'CLOSED' && (
@@ -2477,26 +2454,26 @@ function DashboardContent() {
           {isCompanyAdmin && (
             <TabsContent value="appointments" className="space-y-6">
             <Card className="rounded-2xl border-0 shadow-xl overflow-hidden bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white px-6 py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <CardHeader className="bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white px-4 sm:px-6 py-4 sm:py-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-white">Appointments</CardTitle>
-                      <CardDescription className="text-white/80 mt-0.5">View and manage all scheduled appointments</CardDescription>
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-white truncate">Appointments</CardTitle>
+                      <CardDescription className="text-white/80 mt-0.5 text-xs sm:text-sm truncate">Manage all scheduled appointments</CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
                     <Link
                       href="/completed-appointments"
-                      className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all border border-white/30 backdrop-blur-sm font-medium text-sm"
+                      className="flex justify-center items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all border border-white/30 backdrop-blur-sm font-medium text-sm w-full sm:w-auto"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Completed Appointments
+                      Completed
                     </Link>
                     {(user?.role === 'COMPANY_ADMIN' || user?.role === 'DEPARTMENT_ADMIN') && (
                       <Button
@@ -2515,24 +2492,24 @@ function DashboardContent() {
               {/* Appointment Filters */}
               <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-purple-50/30 border-b border-slate-200">
                 {/* Search and Actions Bar */}
-                <div className="flex items-center justify-between gap-4 mb-3">
-                  <div className="relative flex-1 max-w-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div className="relative w-full sm:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search by ID, name, phone, or purpose..."
+                      placeholder="Search appointments..."
                       value={appointmentSearch}
                       onChange={(e) => setAppointmentSearch(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm text-sm placeholder:text-slate-400"
                     />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleRefreshData}
                       disabled={isRefreshing}
-                      className="border-slate-200 hover:bg-slate-50 rounded-xl"
+                      className="border-slate-200 hover:bg-slate-50 rounded-xl flex-1 sm:flex-none"
                       title="Refresh data"
                     >
                       <RefreshCw className={`w-4 h-4 mr-1.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -2554,7 +2531,7 @@ function DashboardContent() {
                           { key: 'status', label: 'Status' }
                         ]
                       )}
-                      className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl"
+                      className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl flex-1 sm:flex-none"
                       title="Export to CSV"
                     >
                       <FileDown className="w-4 h-4 mr-1.5" />
@@ -2564,61 +2541,55 @@ function DashboardContent() {
                 </div>
 
                 {/* Filters Row */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-slate-200">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-200 flex-shrink-0">
                     <Filter className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-semibold text-slate-700">Filters</span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-700">Filters</span>
                   </div>
                   
-                  {/* Status Filter */}
-                  <select
-                    value={appointmentFilters.status}
-                    onChange={(e) => setAppointmentFilters(prev => ({ ...prev, status: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm hover:border-purple-300 transition-colors cursor-pointer"
-                    title="Filter by appointment status"
-                  >
-                    <option value="">📋 All Status</option>
-                    <option value="SCHEDULED">📅 Scheduled</option>
-                    <option value="CONFIRMED">✅ Confirmed</option>
-                    <option value="COMPLETED">✅ Completed</option>
-                    <option value="CANCELLED">❌ Cancelled</option>
-                  </select>
-
-                  {/* Department Filter - Removed (Appointments are CEO-only, no departments) */}
-                  {/* Assignment Status Filter - Removed (Appointments are CEO-only, no assignment needed) */}
-
-                  {/* Date Filter */}
-                  <select
-                    value={appointmentFilters.dateFilter}
-                    onChange={(e) => setAppointmentFilters(prev => ({ ...prev, dateFilter: e.target.value }))}
-                    className="text-xs px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm hover:border-purple-300 transition-colors cursor-pointer"
-                    title="Filter by date"
-                  >
-                    <option value="">📅 All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="upcoming">Upcoming</option>
-                  </select>
-
-                  {/* Clear Filters */}
-                  {(appointmentFilters.status || appointmentFilters.dateFilter) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setAppointmentFilters({ status: '', department: '', assignmentStatus: '', dateFilter: '' })}
-                      className="text-xs h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200"
-                      title="Clear all filters"
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <select
+                      value={appointmentFilters.status}
+                      onChange={(e) => setAppointmentFilters(prev => ({ ...prev, status: e.target.value }))}
+                      className="flex-1 sm:flex-none text-[11px] sm:text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm transition-colors cursor-pointer min-w-[100px]"
                     >
-                      <X className="w-3 h-3 mr-1" />
-                      Clear
-                    </Button>
-                  )}
+                      <option value="">📋 Status</option>
+                      <option value="SCHEDULED">📅 Scheduled</option>
+                      <option value="CONFIRMED">✅ Confirmed</option>
+                      <option value="COMPLETED">✅ Completed</option>
+                      <option value="CANCELLED">❌ Cancelled</option>
+                    </select>
 
-                  {/* Results count */}
-                  <span className="text-xs text-slate-500 ml-auto bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">
-                    Showing <span className="font-semibold text-purple-600">{getSortedData(appointments, 'appointments').length}</span> of {appointments.length} appointments
-                  </span>
+                    <select
+                      value={appointmentFilters.dateFilter}
+                      onChange={(e) => setAppointmentFilters(prev => ({ ...prev, dateFilter: e.target.value }))}
+                      className="flex-1 sm:flex-none text-[11px] sm:text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white shadow-sm transition-colors cursor-pointer min-w-[100px]"
+                    >
+                      <option value="">📅 Time</option>
+                      <option value="today">Today</option>
+                      <option value="week">Week</option>
+                      <option value="month">Month</option>
+                      <option value="upcoming">Upcoming</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-3 mt-1 sm:mt-0">
+                    {(appointmentFilters.status || appointmentFilters.dateFilter) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAppointmentFilters({ status: '', department: '', assignmentStatus: '', dateFilter: '' })}
+                        className="text-[11px] h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Clear
+                      </Button>
+                    )}
+
+                    <span className="text-[10px] sm:text-xs text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 whitespace-nowrap">
+                      Found: <span className="font-bold text-purple-600">{getSortedData(appointments, 'appointments').length}</span>
+                    </span>
+                  </div>
 
                   {/* Bulk Delete Button (Super Admin only) */}
                   {user?.role === 'SUPER_ADMIN' && selectedAppointments.size > 0 && (
@@ -2627,8 +2598,7 @@ function DashboardContent() {
                       size="sm"
                       onClick={handleBulkDeleteAppointments}
                       disabled={isDeleting}
-                      className="text-xs h-8 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl border border-red-700 shadow-sm"
-                      title={`Delete ${selectedAppointments.size} selected appointment(s)`}
+                      className="text-xs h-9 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm w-full sm:w-auto mt-2 sm:mt-0"
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                       Delete ({selectedAppointments.size})
@@ -2708,20 +2678,13 @@ function DashboardContent() {
                               onClick={() => handleSort('appointmentDate', 'appointments')}
                               className="group flex items-center space-x-1.5 text-[11px] font-bold text-purple-600 uppercase tracking-wider hover:text-purple-800 transition-colors"
                             >
-                              <span>Scheduled At</span>
+                              <span>Scheduled On</span>
                               <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'appointmentDate' ? 'text-purple-600' : 'text-purple-300 group-hover:text-purple-400'}`} />
                             </button>
                           </th>
-                          <th className="px-4 py-4 text-left">
-                            <button 
-                              onClick={() => handleSort('status', 'appointments')}
-                              className="group flex items-center space-x-1.5 text-[11px] font-bold text-purple-600 uppercase tracking-wider hover:text-purple-800 transition-colors"
-                            >
-                              <span>Status</span>
-                              <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'status' ? 'text-purple-600' : 'text-purple-300 group-hover:text-purple-400'}`} />
-                            </button>
-                          </th>
-                          <th className="px-4 py-4 text-center text-[11px] font-bold text-purple-600 uppercase tracking-wider">Actions</th>
+                          <th className="px-4 py-4 text-left text-[11px] font-bold text-purple-600 uppercase tracking-wider">Assigned</th>
+                          <th className="px-4 py-4 text-left text-[11px] font-bold text-purple-600 uppercase tracking-wider">Status</th>
+                          <th className="px-4 py-4 text-center text-[11px] font-bold text-purple-600 uppercase tracking-wider sticky right-0 bg-fuchsia-50/90 backdrop-blur-sm z-10 border-l border-slate-200 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">

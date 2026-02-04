@@ -180,23 +180,23 @@ export default function AssignmentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-0 shadow-2xl [&>button]:hidden">
+      <DialogContent className="w-full md:max-w-2xl h-[100dvh] md:h-auto md:max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 rounded-none md:rounded-2xl border-0 shadow-2xl [&>button]:hidden">
         {/* Gradient Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-6 relative overflow-hidden flex-shrink-0">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA4KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-50"></div>
           
-          <div className="relative flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <UserCheck className="w-6 h-6 text-white" />
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-bold text-white truncate">
                   Assign {itemType === 'grievance' ? 'Grievance' : 'Appointment'}
                 </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-white/80 text-sm">Current:</span>
-                  <span className="px-2.5 py-0.5 bg-white/20 rounded-full text-xs font-semibold text-white backdrop-blur-sm">
+                <div className="flex items-center gap-2 mt-1 min-w-0">
+                  <span className="text-white/80 text-xs sm:text-sm whitespace-nowrap">Current:</span>
+                  <span className="px-2.5 py-0.5 bg-white/20 rounded-full text-[10px] sm:text-xs font-semibold text-white backdrop-blur-sm truncate">
                     {getCurrentAssigneeName()}
                   </span>
                 </div>
@@ -204,9 +204,9 @@ export default function AssignmentDialog({
             </div>
             <button 
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all z-10"
+              className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all flex-shrink-0"
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
@@ -281,13 +281,13 @@ export default function AssignmentDialog({
                   return (
                     <div
                       key={user._id}
-                      className={`p-4 hover:bg-slate-50 transition-all duration-200 ${
+                      className={`p-3 sm:p-4 hover:bg-slate-50 transition-all duration-200 ${
                         isCurrentAssignee ? 'bg-blue-50/50' : ''
                       }`}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
                         {/* Avatar */}
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md ${
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md flex-shrink-0 ${
                           isCurrentAssignee 
                             ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
                             : 'bg-gradient-to-br from-slate-400 to-slate-500'
@@ -297,33 +297,27 @@ export default function AssignmentDialog({
 
                         {/* User Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-slate-900">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-slate-900 text-sm sm:text-base truncate">
                               {user.firstName} {user.lastName}
                             </h4>
                             {isCurrentAssignee && (
-                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-bold uppercase">
+                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] sm:text-[10px] rounded-full font-bold uppercase">
                                 Current
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 mt-1 text-slate-500 text-sm">
-                            <Mail className="w-3.5 h-3.5" />
+                          <div className="flex items-center gap-1.5 mt-0.5 text-slate-500 text-[11px] sm:text-xs">
+                            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                             <span className="truncate">{user.email}</span>
                           </div>
-                          <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono bg-slate-100 px-1 py-0.5 rounded">
                               {user.userId}
                             </span>
-                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${getRoleColor(user.role)}`}>
+                            <span className={`px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-full border ${getRoleColor(user.role)}`}>
                               {user.role.replace('_', ' ')}
                             </span>
-                            {userDept && (
-                              <span className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                                <Building2 className="w-3 h-3" />
-                                <span className="truncate max-w-[120px]">{userDept.name}</span>
-                              </span>
-                            )}
                           </div>
                         </div>
 
@@ -332,28 +326,29 @@ export default function AssignmentDialog({
                           onClick={() => handleAssign(user._id)}
                           disabled={assigningUserId !== null || isCurrentAssignee}
                           size="sm"
-                          className={`min-w-[100px] rounded-xl font-semibold transition-all shadow-md ${
+                          className={`px-3 py-1 sm:px-4 sm:py-2 h-8 sm:h-9 min-w-[70px] sm:min-w-[90px] rounded-lg sm:rounded-xl font-bold transition-all shadow-sm text-[10px] sm:text-xs ${
                             isCurrentAssignee
-                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none'
+                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 shadow-none font-medium'
                               : isAssigning
                               ? 'bg-blue-600'
-                              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                              : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
                           }`}
                         >
                           {isAssigning ? (
-                            <span className="flex items-center gap-1.5">
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Assigning
+                            <span className="flex items-center gap-1">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span className="hidden sm:inline">Assigning</span>
                             </span>
                           ) : isCurrentAssignee ? (
-                            <span className="flex items-center gap-1.5">
-                              <UserCheck className="w-4 h-4" />
-                              Assigned
+                            <span className="flex items-center gap-1">
+                              <UserCheck className="w-3 h-3" />
+                              <span className="hidden sm:inline">Assigned</span>
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1.5">
-                              <UserCheck className="w-4 h-4" />
-                              Assign
+                            <span className="flex items-center gap-1">
+                              <UserCheck className="w-3 h-3" />
+                              <span className="hidden sm:inline">Assign</span>
+                              <span className="sm:hidden">Assign</span>
                             </span>
                           )}
                         </Button>

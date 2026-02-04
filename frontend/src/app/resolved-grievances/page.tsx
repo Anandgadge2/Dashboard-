@@ -127,28 +127,28 @@ export default function ResolvedGrievancesPage() {
       {/* Header with Gradient */}
       <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-xl">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                <CheckCircle className="w-7 h-7 text-white" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg flex-shrink-0">
+                <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Resolved Grievances</h1>
-                <p className="text-white/80 mt-0.5">View completed and resolved citizen grievances</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">Resolved Grievances</h1>
+                <p className="text-xs sm:text-sm text-white/80 mt-0.5 truncate">View completed citizen grievances</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <button 
                 onClick={() => router.back()}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/30 backdrop-blur-sm"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/30 backdrop-blur-sm text-sm"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Back
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Back</span>
               </button>
-              <div className="text-right bg-white/10 px-4 py-2 rounded-xl border border-white/20 backdrop-blur-sm">
-                <p className="text-sm text-white/70">Resolved</p>
-                <p className="text-2xl font-bold text-white">{grievances.length}</p>
+              <div className="flex flex-col items-end bg-white/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-white/20 backdrop-blur-sm min-w-[70px]">
+                <p className="text-[10px] sm:text-xs text-white/70">Resolved</p>
+                <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{grievances.length}</p>
               </div>
             </div>
           </div>
@@ -156,60 +156,56 @@ export default function ResolvedGrievancesPage() {
       </div>
       
       {/* Content Area */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Filters Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-6 mb-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Search */}
+            <div className="relative col-span-1 sm:col-span-2 lg:col-span-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search citizen or ID..."
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/50"
+              />
+            </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* Search */}
-          <div className="relative col-span-2 md:col-span-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search by name or ID..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
+            {/* Department */}
+            <select
+              value={filters.department}
+              onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-green-500 bg-white/50 cursor-pointer"
+            >
+              <option value="all">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
+              ))}
+            </select>
+
+            {/* Date Range */}
+            <select
+              value={filters.dateRange}
+              onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-green-500 bg-white/50 cursor-pointer"
+            >
+              <option value="all">All Time</option>
+              <option value="today">📅 Resolved Today</option>
+              <option value="week">📆 Last 7 Days</option>
+              <option value="month">🗓️ Last 30 Days</option>
+            </select>
+
+            {/* Reset Button */}
+            <button
+              onClick={() => setFilters({ department: 'all', dateRange: 'all', search: '' })}
+              className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center font-medium"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Reset
+            </button>
           </div>
-
-          {/* Department */}
-          <select
-            value={filters.department}
-            onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="all">All Departments</option>
-            {departments.map((dept) => (
-              <option key={dept._id} value={dept._id}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Date Range */}
-          <select
-            value={filters.dateRange}
-            onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="all">All Time</option>
-            <option value="today">📅 Resolved Today</option>
-            <option value="week">📆 Last 7 Days</option>
-            <option value="month">🗓️ Last 30 Days</option>
-          </select>
-
-          {/* Reset Button */}
-          <button
-            onClick={() => setFilters({ department: 'all', dateRange: 'all', search: '' })}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Reset Filters
-          </button>
         </div>
-      </div>
 
       {/* Grievances Table */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl overflow-hidden">
@@ -224,18 +220,18 @@ export default function ResolvedGrievancesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[1200px]">
               <thead className="bg-slate-50 border-b border-slate-200 whitespace-nowrap">
                 <tr>
                   <th className="px-4 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide">Sr. No.</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Application No</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Citizen Information</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Citizen Info</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Department & Category</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Issue Description</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Resolved By</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Resolved On</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide">Actions</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide sticky right-0 bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -319,14 +315,14 @@ export default function ResolvedGrievancesPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center space-x-2">
+                    <td className="px-6 py-4 sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
+                      <div className="flex items-center justify-center">
                         <button
                           onClick={() => handleViewDetails(grievance)}
                           title="View Full Details"
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-200"
+                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-200"
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       </div>
                     </td>

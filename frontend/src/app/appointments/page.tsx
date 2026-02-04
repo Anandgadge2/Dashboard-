@@ -199,35 +199,35 @@ export default function AppointmentsPage() {
       {/* Header with Gradient */}
       <div className="bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 shadow-xl">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                <Calendar className="w-7 h-7 text-white" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg flex-shrink-0">
+                <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Appointment Management</h1>
-                <p className="text-white/80 mt-0.5">View and manage citizen appointments</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">Appointments</h1>
+                <p className="text-xs sm:text-sm text-white/80 mt-0.5 truncate">View and manage citizen appointments</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <Link
                 href="/completed-appointments"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all border border-white/30 backdrop-blur-sm font-medium"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all border border-white/30 backdrop-blur-sm font-medium text-sm"
               >
-                <CheckCircle className="w-5 h-5" />
-                Completed Appointments
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Completed</span>
               </Link>
               <button 
                 onClick={() => router.back()}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/30 backdrop-blur-sm"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/30 backdrop-blur-sm text-sm"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Back
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Back</span>
               </button>
-              <div className="text-right bg-white/10 px-4 py-2 rounded-xl border border-white/20 backdrop-blur-sm">
-                <p className="text-sm text-white/70">Total</p>
-                <p className="text-2xl font-bold text-white">{appointments.length}</p>
+              <div className="flex flex-col items-end bg-white/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-white/20 backdrop-blur-sm min-w-[60px]">
+                <p className="text-[10px] sm:text-xs text-white/70">Total</p>
+                <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{appointments.length}</p>
               </div>
             </div>
           </div>
@@ -235,86 +235,71 @@ export default function AppointmentsPage() {
       </div>
       
       {/* Content Area */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Filters Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-6 mb-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            {/* Search */}
+            <div className="relative col-span-1 sm:col-span-2 lg:col-span-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search citizen or ID..."
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50"
+              />
+            </div>
+            
+            {/* Status */}
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-purple-500 bg-white/50 cursor-pointer"
+            >
+              <option value="all">All Status</option>
+              <option value="SCHEDULED">🔵 Scheduled</option>
+              <option value="CONFIRMED">✅ Confirmed</option>
+              <option value="COMPLETED">✅ Completed</option>
+              <option value="CANCELLED">❌ Cancelled</option>
+            </select>
 
-        {/* Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {/* Search */}
-          <div className="relative col-span-2 md:col-span-1 lg:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search by name or ID..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+            {/* Department */}
+            <select
+              value={filters.department}
+              onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-purple-500 bg-white/50 cursor-pointer"
+            >
+              <option value="all">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
+              ))}
+            </select>
+
+            {/* Date Filter */}
+            <select
+              value={filters.dateFilter}
+              onChange={(e) => setFilters({ ...filters, dateFilter: e.target.value })}
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-purple-500 bg-white/50 cursor-pointer"
+            >
+              <option value="all">All Dates</option>
+              <option value="today">📅 Today</option>
+              <option value="thisWeek">📆 This Week</option>
+              <option value="thisMonth">🗓️ This Month</option>
+              <option value="upcoming">⏳ Upcoming</option>
+              <option value="past">📋 Past</option>
+            </select>
+
+            {/* Reset Button */}
+            <button
+              onClick={() => setFilters({ status: 'all', department: 'all', assignment: 'all', dateFilter: 'all', search: '' })}
+              className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center font-medium"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Reset
+            </button>
           </div>
-          
-          {/* Status */}
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="SCHEDULED">🔵 Scheduled</option>
-            <option value="CONFIRMED">✅ Confirmed</option>
-            <option value="COMPLETED">✅ Completed</option>
-            <option value="CANCELLED">❌ Cancelled</option>
-          </select>
-
-          {/* Department */}
-          <select
-            value={filters.department}
-            onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="all">All Departments</option>
-            {departments.map((dept) => (
-              <option key={dept._id} value={dept._id}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Date Filter */}
-          <select
-            value={filters.dateFilter}
-            onChange={(e) => setFilters({ ...filters, dateFilter: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="all">All Dates</option>
-            <option value="today">📅 Today</option>
-            <option value="thisWeek">📆 This Week</option>
-            <option value="thisMonth">🗓️ This Month</option>
-            <option value="upcoming">⏳ Upcoming</option>
-            <option value="past">📋 Past</option>
-          </select>
-
-          {/* Assignment Filter */}
-          <select
-            value={filters.assignment}
-            onChange={(e) => setFilters({ ...filters, assignment: e.target.value })}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="all">All Assignments</option>
-            <option value="assigned">✅ Assigned</option>
-            <option value="unassigned">⏳ Unassigned</option>
-          </select>
-
-          {/* Reset Button */}
-          <button
-            onClick={() => setFilters({ status: 'all', department: 'all', assignment: 'all', dateFilter: 'all', search: '' })}
-            className="px-3 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Reset
-          </button>
         </div>
-      </div>
 
       {/* Appointments Table */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl overflow-hidden">
@@ -330,17 +315,17 @@ export default function AppointmentsPage() {
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full min-w-[1400px]">
-              <thead className="sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-fuchsia-50 to-pink-50 border-b border-purple-100">
+              <thead className="sticky top-0 z-10 bg-gradient-to-r from-purple-50 via-fuchsia-50 to-pink-50 border-b border-purple-100 whitespace-nowrap">
                 <tr>
                   <th className="px-4 py-4 text-center text-[11px] font-bold text-purple-700 uppercase tracking-wide">Sr. No.</th>
                   <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Appointment ID</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Citizen Information</th>
-                  <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Department & Purpose</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Citizen Info</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Dept & Purpose</th>
                   <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Scheduled At</th>
                   <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Assigned To</th>
                   <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Status</th>
                   <th className="px-6 py-4 text-left text-[11px] font-bold text-purple-700 uppercase tracking-wide">Created</th>
-                  <th className="px-6 py-4 text-center text-[11px] font-bold text-purple-700 uppercase tracking-wide">Actions</th>
+                  <th className="px-6 py-4 text-center text-[11px] font-bold text-purple-700 uppercase tracking-wide sticky right-0 bg-fuchsia-50 z-10 border-l border-purple-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -456,15 +441,15 @@ export default function AppointmentsPage() {
                         <span className="text-gray-400">{new Date(appointment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-1">
+                    <td className="px-6 py-4 sticky right-0 bg-white group-hover/row:bg-purple-50/50 z-10 border-l border-slate-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2">
                         {user?.role === 'COMPANY_ADMIN' && appointment.status !== 'COMPLETED' && appointment.status !== 'CANCELLED' && (
                           <button
                             onClick={() => handleAssignClick(appointment)}
                             title="Assign Officer"
                             className="p-2 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all duration-200"
                           >
-                            <UserPlus className="w-4 h-4" />
+                            <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
                         )}
                         <button
@@ -472,7 +457,7 @@ export default function AppointmentsPage() {
                           title="View Full Details"
                           className="p-2 rounded-lg text-purple-600 hover:text-purple-700 hover:bg-purple-50 border border-transparent hover:border-purple-200 transition-all duration-200"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       </div>
                     </td>

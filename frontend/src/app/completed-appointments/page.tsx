@@ -189,28 +189,28 @@ export default function CompletedAppointmentsPage() {
       {/* Header with Gradient */}
       <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-xl">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-                <CheckCircle className="w-7 h-7 text-white" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg flex-shrink-0">
+                <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Completed Appointments</h1>
-                <p className="text-white/80 mt-0.5">View all completed citizen appointments</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">Completed Appointments</h1>
+                <p className="text-xs sm:text-sm text-white/80 mt-0.5 truncate">View all completed citizen appointments</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/dashboard?tab=appointments"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/30 backdrop-blur-sm"
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <button 
+                onClick={() => router.back()}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all border border-white/30 backdrop-blur-sm text-sm"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Appointments
-              </Link>
-              <div className="text-right bg-white/10 px-4 py-2 rounded-xl border border-white/20 backdrop-blur-sm">
-                <p className="text-sm text-white/70">Completed</p>
-                <p className="text-2xl font-bold text-white">{appointments.length}</p>
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Back</span>
+              </button>
+              <div className="flex flex-col items-end bg-white/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-white/20 backdrop-blur-sm min-w-[70px]">
+                <p className="text-[10px] sm:text-xs text-white/70">Completed</p>
+                <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{appointments.length}</p>
               </div>
             </div>
           </div>
@@ -218,20 +218,19 @@ export default function CompletedAppointmentsPage() {
       </div>
       
       {/* Content Area */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Filters Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-6 mb-6">
-          {/* Filters */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Search */}
-            <div className="relative col-span-2 md:col-span-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="relative col-span-1 sm:col-span-2 lg:col-span-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search by name, ID, or purpose..."
+                placeholder="Search citizen or ID..."
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50"
               />
             </div>
 
@@ -239,13 +238,11 @@ export default function CompletedAppointmentsPage() {
             <select
               value={filters.department}
               onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 bg-white/50 cursor-pointer"
             >
               <option value="all">All Departments</option>
               {departments.map((dept) => (
-                <option key={dept._id} value={dept._id}>
-                  {dept.name}
-                </option>
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
               ))}
             </select>
 
@@ -253,7 +250,7 @@ export default function CompletedAppointmentsPage() {
             <select
               value={filters.dateRange}
               onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 bg-white/50 cursor-pointer"
             >
               <option value="all">All Time</option>
               <option value="today">📅 Completed Today</option>
@@ -264,10 +261,10 @@ export default function CompletedAppointmentsPage() {
             {/* Reset Button */}
             <button
               onClick={() => setFilters({ department: 'all', dateRange: 'all', search: '' })}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center"
+              className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center font-medium"
             >
               <Filter className="w-4 h-4 mr-2" />
-              Reset Filters
+              Reset
             </button>
           </div>
         </div>
@@ -303,7 +300,7 @@ export default function CompletedAppointmentsPage() {
                         onClick={() => handleSort('citizenName')}
                         className="group flex items-center space-x-1.5 text-xs font-semibold text-emerald-700 uppercase tracking-wide hover:text-emerald-800 transition-colors"
                       >
-                        <span>Citizen Information</span>
+                        <span>Citizen Info</span>
                         <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'citizenName' ? 'text-emerald-700' : 'text-emerald-300 group-hover:text-emerald-400'}`} />
                       </button>
                     </th>
@@ -326,7 +323,7 @@ export default function CompletedAppointmentsPage() {
                         <ArrowUpDown className={`w-3.5 h-3.5 transition-colors ${sortConfig.key === 'completedAt' ? 'text-emerald-700' : 'text-emerald-300 group-hover:text-emerald-400'}`} />
                       </button>
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-emerald-700 uppercase tracking-wide">Actions</th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-emerald-700 uppercase tracking-wide sticky right-0 bg-cyan-50 z-10 border-l border-emerald-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -404,14 +401,16 @@ export default function CompletedAppointmentsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => handleViewDetails(appointment)}
-                            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                        <td className="px-6 py-4 sticky right-0 bg-white group-hover:bg-emerald-50/30 z-10 border-l border-emerald-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
+                          <div className="flex items-center justify-center">
+                            <button
+                              onClick={() => handleViewDetails(appointment)}
+                              className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
