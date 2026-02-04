@@ -26,6 +26,40 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
+// Helper function to fix Cloudinary URLs for PDFs and documents
+const fixCloudinaryUrl = (url: string): string => {
+  if (!url) return url;
+  
+  // Only process actual Cloudinary URLs (not WhatsApp media IDs)
+  if (!url.startsWith('http') || !url.includes('cloudinary.com')) {
+    return url; // Return as-is if not a Cloudinary URL
+  }
+  
+  // Check if it's a PDF or document file
+  const isPDF = url.toLowerCase().endsWith('.pdf');
+  const isDoc = url.match(/\.(doc|docx|xls|xlsx|ppt|pptx)$/i);
+  
+  if (isPDF || isDoc) {
+    // For Cloudinary URLs, add fl_attachment to force download
+    if (url.includes('/upload/')) {
+      // Check if fl_attachment is already present
+      if (url.includes('fl_attachment')) {
+        return url; // Already has the flag
+      }
+      
+      // Add fl_attachment flag to force download
+      // This works for both /image/upload/ and /raw/upload/
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        // Insert fl_attachment after /upload/
+        return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+      }
+    }
+  }
+  
+  return url;
+};
+
 
 interface GrievanceDetailDialogProps {
   isOpen: boolean;
@@ -147,9 +181,54 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-1 p-5 space-y-5">
+          {/* Citizen Information */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-5 py-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                Citizen Information
+              </h3>
+            </div>
+            <div className="p-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Full Name</p>
+                    <p className="text-sm font-bold text-slate-800 break-words">{grievance.citizenName}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Phone Number</p>
+                    <p className="text-sm font-bold text-slate-800">{grievance.citizenPhone}</p>
+                  </div>
+                </div>
+
+                {/* {grievance.citizenWhatsApp && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">WhatsApp</p>
+                      <p className="text-sm font-bold text-slate-800">{grievance.citizenWhatsApp}</p>
+                    </div>
+                  </div>
+                )} */}
+              </div>
+            </div>
+          </div>
+
           {/* Quick Info Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {/* <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <User className="w-3.5 h-3.5 text-blue-600" />
@@ -157,7 +236,7 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
                 <span className="text-[10px] font-bold text-blue-600 uppercase">Citizen</span>
               </div>
               <p className="text-sm font-bold text-gray-900 truncate" title={grievance.citizenName}>{grievance.citizenName}</p>
-            </div>
+            </div> */}
 
             <div className="bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-3 border border-purple-100 group relative">
               <div className="flex items-center gap-2 mb-1.5">
@@ -166,16 +245,9 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
                 </div>
                 <span className="text-[10px] font-bold text-purple-600 uppercase">Category</span>
               </div>
-              <p className="text-sm font-bold text-gray-900 truncate" title={grievance.category || 'General'}>
+              <p className="text-sm font-bold text-gray-900 break-words">
                 {grievance.category || 'General'}
               </p>
-              {/* Tooltip for full category name */}
-              {grievance.category && grievance.category.length > 15 && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
-                  {grievance.category}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                </div>
-              )}
             </div>
 
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-3 border border-emerald-100">
@@ -199,50 +271,6 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
             </div>
           </div>
 
-          {/* Citizen Information */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-5 py-4 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                Citizen Information
-              </h3>
-            </div>
-            <div className="p-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Full Name</p>
-                    <p className="text-sm font-bold text-slate-800 truncate">{grievance.citizenName}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Phone Number</p>
-                    <p className="text-sm font-bold text-slate-800">{grievance.citizenPhone}</p>
-                  </div>
-                </div>
-
-                {grievance.citizenWhatsApp && (
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <MessageCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">WhatsApp</p>
-                      <p className="text-sm font-bold text-slate-800">{grievance.citizenWhatsApp}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
 
           {/* Grievance Description */}
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -315,26 +343,56 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
               </div>
               <div className="p-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {grievance.media.map((media: any, index: number) => (
-                    <div key={index} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-video">
-                      {media.type === 'image' || media.url?.includes('image') ? (
-                        <>
-                          <Image
-                            src={media.url}
-                            alt={`Upload ${index + 1}`}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                        </>
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center">
-                          <FileText className="w-8 h-8 text-slate-400 mb-2" />
-                          <span className="text-xs text-slate-500">Document</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {grievance.media.map((media: any, index: number) => {
+                    const fixedUrl = fixCloudinaryUrl(media.url);
+                    const isPDF = media.url?.toLowerCase().endsWith('.pdf');
+                    const isImage = !isPDF && (
+                      media.type === 'image' || 
+                      media.url?.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i)
+                    );
+                    
+                    return (
+                      <div key={index} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-video">
+                        {isPDF ? (
+                          // PDF Preview
+                          <a
+                            href={fixedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 transition-all cursor-pointer"
+                          >
+                            <FileText className="w-12 h-12 text-red-600 mb-2" />
+                            <span className="text-xs font-bold text-red-700">PDF Document</span>
+                            <span className="text-[10px] text-red-500 mt-1">Click to view</span>
+                          </a>
+                        ) : isImage ? (
+                          // Image Preview
+                          <>
+                            <Image
+                              src={fixedUrl}
+                              alt={`Upload ${index + 1}`}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
+                              onClick={() => window.open(fixedUrl, '_blank')}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          </>
+                        ) : (
+                          // Other Document Types
+                          <a
+                            href={fixedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 transition-all cursor-pointer"
+                          >
+                            <FileText className="w-8 h-8 text-slate-400 mb-2" />
+                            <span className="text-xs text-slate-500">Document</span>
+                            <span className="text-[10px] text-slate-400 mt-1">Click to view</span>
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

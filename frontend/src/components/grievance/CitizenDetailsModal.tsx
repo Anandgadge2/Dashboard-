@@ -6,6 +6,40 @@ import { X, MapPin, Phone, Calendar, Image as ImageIcon, FileText, User, Message
 import Image from 'next/image';
 import { format, formatDistanceToNow } from 'date-fns';
 
+// Helper function to fix Cloudinary URLs for PDFs and documents
+const fixCloudinaryUrl = (url: string): string => {
+  if (!url) return url;
+  
+  // Only process actual Cloudinary URLs (not WhatsApp media IDs)
+  if (!url.startsWith('http') || !url.includes('cloudinary.com')) {
+    return url; // Return as-is if not a Cloudinary URL
+  }
+  
+  // Check if it's a PDF or document file
+  const isPDF = url.toLowerCase().endsWith('.pdf');
+  const isDoc = url.match(/\.(doc|docx|xls|xlsx|ppt|pptx)$/i);
+  
+  if (isPDF || isDoc) {
+    // For Cloudinary URLs, add fl_attachment to force download
+    if (url.includes('/upload/')) {
+      // Check if fl_attachment is already present
+      if (url.includes('fl_attachment')) {
+        return url; // Already has the flag
+      }
+      
+      // Add fl_attachment flag to force download
+      // This works for both /image/upload/ and /raw/upload/
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        // Insert fl_attachment after /upload/
+        return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+      }
+    }
+  }
+  
+  return url;
+};
+
 interface CitizenDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -94,7 +128,7 @@ export default function CitizenDetailsModal({
                 </div>
                 <span className="text-xs font-bold text-blue-600 uppercase">Citizen</span>
               </div>
-              <p className="text-base font-bold text-gray-900 truncate" title={data?.citizenName}>{data?.citizenName}</p>
+              <p className="text-base font-bold text-gray-900 break-words">{data?.citizenName}</p>
             </div>
 
             {grievance && (
@@ -105,7 +139,7 @@ export default function CitizenDetailsModal({
                   </div>
                   <span className="text-xs font-bold text-purple-600 uppercase">Category</span>
                 </div>
-                <p className="text-base font-bold text-gray-900 truncate" title={grievance.category || 'General'}>
+                <p className="text-base font-bold text-gray-900 break-words">
                   {grievance.category || 'General'}
                 </p>
               </div>
@@ -162,7 +196,7 @@ export default function CitizenDetailsModal({
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Full Name</p>
-                    <p className="text-base font-bold text-slate-800 truncate">{data?.citizenName}</p>
+                    <p className="text-base font-bold text-slate-800 break-words">{data?.citizenName}</p>
                   </div>
                 </div>
 
@@ -311,7 +345,7 @@ export default function CitizenDetailsModal({
               <div className="bg-gradient-to-r from-slate-50 to-pink-50 px-5 py-4 border-b border-slate-100">
                 <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-pink-600" />
-                  Attached Photos
+                  Attached Files
                   <span className="ml-2 px-2 py-0.5 bg-pink-100 text-pink-600 rounded-full text-xs font-bold">
                     {grievance.media.length}
                   </span>
@@ -319,18 +353,40 @@ export default function CitizenDetailsModal({
               </div>
               <div className="p-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {grievance.media.map((media: any, index: number) => (
-                    <div key={index} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-video">
-                      <Image
-                        src={media.url}
-                        alt={`Evidence ${index + 1}`}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        onClick={() => window.open(media.url, '_blank')}
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                    </div>
-                  ))}
+                  {grievance.media.map((media: any, index: number) => {
+                    const fixedUrl = fixCloudinaryUrl(media.url);
+                    const isPDF = media.url?.toLowerCase().endsWith('.pdf');
+                    
+                    return (
+                      <div key={index} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-video">
+                        {isPDF ? (
+                          // PDF Preview
+                          <a
+                            href={fixedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 transition-all cursor-pointer"
+                          >
+                            <FileText className="w-12 h-12 text-red-600 mb-2" />
+                            <span className="text-xs font-bold text-red-700">PDF Document</span>
+                            <span className="text-[10px] text-red-500 mt-1">Click to view</span>
+                          </a>
+                        ) : (
+                          // Image Preview
+                          <>
+                            <Image
+                              src={fixedUrl}
+                              alt={`Evidence ${index + 1}`}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
+                              onClick={() => window.open(fixedUrl, '_blank')}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

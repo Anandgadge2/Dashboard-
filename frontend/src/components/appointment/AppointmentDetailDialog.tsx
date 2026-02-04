@@ -94,6 +94,24 @@ const AppointmentDetailDialog: React.FC<AppointmentDetailDialogProps> = ({ isOpe
   const timeAgo = formatDistanceToNow(createdDate, { addSuffix: true });
   const appointmentDate = new Date(appointment.appointmentDate);
 
+  // Helper function to format time to 12-hour format with AM/PM
+  const formatTime12Hour = (time: string): string => {
+    if (!time) return 'N/A';
+    
+    // Parse the time (assuming format like "11:00" or "14:30")
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    if (isNaN(hours) || isNaN(minutes)) return time; // Return original if invalid
+    
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12; // Convert 0 to 12 for midnight
+    const displayMinutes = minutes.toString().padStart(2, '0');
+    
+    return `${displayHours}:${displayMinutes} ${period}`;
+  };
+
+  const formattedTime = formatTime12Hour(appointment.appointmentTime);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto p-4">
       <div className="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl bg-white animate-in fade-in zoom-in duration-200 flex flex-col">
@@ -139,9 +157,55 @@ const AppointmentDetailDialog: React.FC<AppointmentDetailDialogProps> = ({ isOpe
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-1 p-5 space-y-5">
+
+           {/* Citizen Information */}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-5 py-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                Citizen Information
+              </h3>
+            </div>
+            <div className="p-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Full Name</p>
+                    <p className="text-sm font-bold text-slate-800 break-words">{appointment.citizenName}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Phone Number</p>
+                    <p className="text-sm font-bold text-slate-800">{appointment.citizenPhone}</p>
+                  </div>
+                </div>
+
+                {/* {appointment.citizenWhatsApp && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">WhatsApp</p>
+                      <p className="text-sm font-bold text-slate-800">{appointment.citizenWhatsApp}</p>
+                    </div>
+                  </div>
+                )} */}
+              </div>
+            </div>
+          </div>
+
           {/* Quick Info Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+            {/* <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <User className="w-3.5 h-3.5 text-blue-600" />
@@ -149,26 +213,21 @@ const AppointmentDetailDialog: React.FC<AppointmentDetailDialogProps> = ({ isOpe
                 <span className="text-[10px] font-bold text-blue-600 uppercase">Citizen</span>
               </div>
               <p className="text-sm font-bold text-gray-900 truncate" title={appointment.citizenName}>{appointment.citizenName}</p>
-            </div>
+            </div> */}
 
-            <div className="bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-3 border border-purple-100 group relative">
+            {/* <div className="bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-3 border border-purple-100 group relative">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-7 h-7 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Target className="w-3.5 h-3.5 text-purple-600" />
                 </div>
                 <span className="text-[10px] font-bold text-purple-600 uppercase">Purpose</span>
               </div>
-              <p className="text-sm font-bold text-gray-900 truncate" title={appointment.purpose}>
+              <p className="text-sm font-bold text-gray-900 break-words">
                 {appointment.purpose}
-              </p>
-              {/* Tooltip for full purpose */}
-              {appointment.purpose && appointment.purpose.length > 15 && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-9999 pointer-events-none shadow-lg">
-                  {appointment.purpose}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                </div>
-              )}
-            </div>
+              </p> */}
+      
+             
+            {/* </div> */}
 
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-3 border border-emerald-100">
               <div className="flex items-center gap-2 mb-1.5">
@@ -187,53 +246,10 @@ const AppointmentDetailDialog: React.FC<AppointmentDetailDialogProps> = ({ isOpe
                 </div>
                 <span className="text-[10px] font-bold text-amber-600 uppercase">Time</span>
               </div>
-              <p className="text-sm font-bold text-gray-900">{appointment.appointmentTime}</p>
+              <p className="text-sm font-bold text-gray-900">{formattedTime}</p>
             </div>
           </div>
-          {/* Citizen Information */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-5 py-4 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                Citizen Information
-              </h3>
-            </div>
-            <div className="p-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Full Name</p>
-                    <p className="text-sm font-bold text-slate-800 truncate">{appointment.citizenName}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Phone Number</p>
-                    <p className="text-sm font-bold text-slate-800">{appointment.citizenPhone}</p>
-                  </div>
-                </div>
-
-                {appointment.citizenWhatsApp && (
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <MessageCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">WhatsApp</p>
-                      <p className="text-sm font-bold text-slate-800">{appointment.citizenWhatsApp}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+         
 
           {/* Appointment Purpose */}
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
