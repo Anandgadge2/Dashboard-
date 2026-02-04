@@ -13,7 +13,7 @@ import { logger } from '../config/logger';
 export async function uploadWhatsAppMediaToCloudinary(
   mediaId: string, 
   accessToken: string,
-  folder: string = 'ZP_Amravati'
+  folder: string = 'ZP amravati'
 ): Promise<string | null> {
   try {
     if (!mediaId || !accessToken) {
@@ -90,16 +90,50 @@ export async function uploadWhatsAppMediaToCloudinary(
       }
     }
     
+    // Get file extension from MIME type
+    const getExtensionFromMimeType = (mime: string): string => {
+      const mimeMap: Record<string, string> = {
+        'application/pdf': 'pdf',
+        'application/msword': 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/vnd.ms-excel': 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+        'application/vnd.ms-powerpoint': 'ppt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+        'text/plain': 'txt',
+        'text/csv': 'csv',
+        'application/zip': 'zip',
+        'application/x-zip-compressed': 'zip',
+        'application/x-rar-compressed': 'rar',
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+      };
+      return mimeMap[mime] || '';
+    };
+    
+    const fileExtension = getExtensionFromMimeType(mimeType);
+    logger.info(`📎 File extension: ${fileExtension || 'unknown'}`);
+    
     logger.info(`📤 Uploading to Cloudinary with resource_type: ${resourceType}, folder: ${folder}`);
     
     // 4. Upload to Cloudinary using a buffer stream
     return new Promise((resolve, reject) => {
+      const uploadOptions: any = {
+        folder: folder,
+        resource_type: resourceType,
+        tags: ['whatsapp-chatbot', folder]
+      };
+      
+      // For raw files, specify the format to preserve extension
+      if (resourceType === 'raw' && fileExtension) {
+        uploadOptions.format = fileExtension;
+        logger.info(`📌 Setting format: ${fileExtension}`);
+      }
+      
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: folder,
-          resource_type: resourceType,
-          tags: ['whatsapp-chatbot', folder]
-        },
+        uploadOptions,
         (error: any, result: any) => {
           if (error) {
             logger.error('❌ Cloudinary upload failed:', {

@@ -18,7 +18,7 @@ async function testDocumentUpload() {
   }
   
   logger.info('📤 Attempting upload...');
-  const result = await uploadWhatsAppMediaToCloudinary(testMediaId, accessToken, 'ZP_Amravati');
+  const result = await uploadWhatsAppMediaToCloudinary(testMediaId, accessToken, 'ZP amravati');
   
   if (result) {
     logger.info('✅ Upload successful!');

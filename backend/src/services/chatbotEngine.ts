@@ -1002,7 +1002,7 @@ async function continueGrievanceFlow(
       } else if (message.mediaUrl && (message.messageType === 'image' || message.messageType === 'document')) {
         // Professional media handling: Download from WhatsApp and upload to Cloudinary
         const accessToken = company?.whatsappConfig?.accessToken || process.env.WHATSAPP_ACCESS_TOKEN;
-        const cloudinaryUrl = await uploadWhatsAppMediaToCloudinary(message.mediaUrl, accessToken as string, 'ZP_Amravati');
+        const cloudinaryUrl = await uploadWhatsAppMediaToCloudinary(message.mediaUrl, accessToken as string, 'ZP amravati');
         
         session.data.media = [{ 
           url: cloudinaryUrl || message.mediaUrl, // Fallback to ID if upload fails
@@ -1047,7 +1047,7 @@ async function continueGrievanceFlow(
       if (message.mediaUrl && (message.messageType === 'image' || message.messageType === 'document')) {
         // Professional media handling: Download from WhatsApp and upload to Cloudinary
         const accessToken = company?.whatsappConfig?.accessToken || process.env.WHATSAPP_ACCESS_TOKEN;
-        const cloudinaryUrl = await uploadWhatsAppMediaToCloudinary(message.mediaUrl, accessToken as string, 'ZP_Amravati');
+        const cloudinaryUrl = await uploadWhatsAppMediaToCloudinary(message.mediaUrl, accessToken as string, 'ZP amravati');
         
         session.data.media = [{ 
           url: cloudinaryUrl || message.mediaUrl, // Fallback to ID if upload fails

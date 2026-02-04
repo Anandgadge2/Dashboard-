@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Grievance } from '@/lib/api/grievance';
 import { Appointment } from '@/lib/api/appointment';
 import { X, MapPin, Phone, Calendar, Image as ImageIcon, FileText, User, MessageCircle, Tag, Clock } from 'lucide-react';
@@ -15,28 +16,7 @@ const fixCloudinaryUrl = (url: string): string => {
     return url; // Return as-is if not a Cloudinary URL
   }
   
-  // Check if it's a PDF or document file
-  const isPDF = url.toLowerCase().endsWith('.pdf');
-  const isDoc = url.match(/\.(doc|docx|xls|xlsx|ppt|pptx)$/i);
-  
-  if (isPDF || isDoc) {
-    // For Cloudinary URLs, add fl_attachment to force download
-    if (url.includes('/upload/')) {
-      // Check if fl_attachment is already present
-      if (url.includes('fl_attachment')) {
-        return url; // Already has the flag
-      }
-      
-      // Add fl_attachment flag to force download
-      // This works for both /image/upload/ and /raw/upload/
-      const parts = url.split('/upload/');
-      if (parts.length === 2) {
-        // Insert fl_attachment after /upload/
-        return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
-      }
-    }
-  }
-  
+  // We no longer add fl_attachment as we want to view documents in the browser tab
   return url;
 };
 
@@ -378,6 +358,7 @@ export default function CitizenDetailsModal({
                               src={fixedUrl}
                               alt={`Evidence ${index + 1}`}
                               fill
+                              sizes="(max-width: 768px) 50vw, 33vw"
                               className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
                               onClick={() => window.open(fixedUrl, '_blank')}
                             />
@@ -469,6 +450,8 @@ export default function CitizenDetailsModal({
           </button>
         </div>
       </div>
+      
+
     </div>
   );
 }

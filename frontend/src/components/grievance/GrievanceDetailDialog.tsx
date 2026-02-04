@@ -80,26 +80,7 @@ const fixCloudinaryUrl = (url: string): string => {
     return url; // Return as-is if not a Cloudinary URL
   }
   
-  const docInfo = getDocumentType(url);
-  
-  if (docInfo.isDocument) {
-    // For Cloudinary URLs, add fl_attachment to force download
-    if (url.includes('/upload/')) {
-      // Check if fl_attachment is already present
-      if (url.includes('fl_attachment')) {
-        return url; // Already has the flag
-      }
-      
-      // Add fl_attachment flag to force download
-      // This works for both /image/upload/ and /raw/upload/
-      const parts = url.split('/upload/');
-      if (parts.length === 2) {
-        // Insert fl_attachment after /upload/
-        return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
-      }
-    }
-  }
-  
+  // We no longer add fl_attachment as we want to view documents in the browser tab
   return url;
 };
 
@@ -424,6 +405,7 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
                               src={fixedUrl}
                               alt={`Upload ${index + 1}`}
                               fill
+                              sizes="(max-width: 768px) 50vw, 33vw"
                               className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
                               onClick={() => window.open(fixedUrl, '_blank')}
                             />
@@ -586,6 +568,8 @@ const GrievanceDetailDialog: React.FC<GrievanceDetailDialogProps> = ({ isOpen, g
           </Button>
         </div>
       </div>
+      
+
     </div>
   );
 };
