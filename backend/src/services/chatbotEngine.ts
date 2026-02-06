@@ -141,6 +141,45 @@ const translations = {
     'desc_Water Conservation Department': 'Water conservation and management',
     'desc_Animal Husbandry Department': 'Animal husbandry and dairy development',
     'desc_IT Cell': 'Information technology services',
+    
+    // Actual department names from database (exact matches)
+    'dept_DRDA': 'DRDA',
+    'desc_DRDA': 'Rural development programs',
+    'dept_SAPRAVI': 'SAPRAVI',
+    'desc_SAPRAVI': 'Deputy CEO - Admin services',
+    'dept_Gram Panchayat (Deputy CEO)': 'Gram Panchayat (Deputy CEO)',
+    'desc_Gram Panchayat (Deputy CEO)': 'Village panchayat admin',
+    'dept_Women & Child Development': 'Women & Child Development',
+    'desc_Women & Child Development': 'Women & child welfare',
+    'dept_Water & Sanitation / MGNREGA': 'Water & Sanitation / MGNREGA',
+    'desc_Water & Sanitation / MGNREGA': 'Water supply & employment',
+    'dept_Accounts & Finance': 'Accounts & Finance',
+    'desc_Accounts & Finance': 'Financial management',
+    'dept_Health': 'Health',
+    'desc_Health': 'Healthcare & medical services',
+    'dept_Social Welfare': 'Social Welfare',
+    'desc_Social Welfare': 'Welfare schemes & assistance',
+    'dept_Education (Primary)': 'Education (Primary)',
+    'desc_Education (Primary)': 'Primary schools & education',
+    'dept_Education (Secondary)': 'Education (Secondary)',
+    'desc_Education (Secondary)': 'Secondary & higher education',
+    'dept_Education (Planning)': 'Education (Planning)',
+    'desc_Education (Planning)': 'Education planning',
+    'dept_Construction (EE)': 'Construction (EE)',
+    'desc_Construction (EE)': 'Building & infrastructure',
+    'dept_Gram Panchayat (EE)': 'Gram Panchayat (EE)',
+    'desc_Gram Panchayat (EE)': 'Village infrastructure',
+    'dept_Minor Irrigation': 'Minor Irrigation',
+    'desc_Minor Irrigation': 'Irrigation & water mgmt',
+    'dept_Animal Husbandry': 'Animal Husbandry',
+    'desc_Animal Husbandry': 'Livestock & dairy',
+    'dept_Agriculture': 'Agriculture',
+    'desc_Agriculture': 'Farming support, agricultural',
+    'dept_PS Amravati': 'PS Amravati',
+    'desc_PS Amravati': 'Panchayat Samiti Amravati',
+    'dept_PS Achalpur': 'PS Achalpur',
+    'desc_PS Achalpur': 'Panchayat Samiti Achalpur',
+    
     goodbye: '👋 *Thank You*\n\nThank you for contacting Zilla Parishad Amravati. We are always ready to serve you.\n\n📞 *For Support:*\n• Type "Hi" anytime for assistance\n• Type "Help" for helpdesk information\n• Type "Menu" to see all services\n\n🌐 *Website:* zpamravati.gov.in\n📍 *Office:* Zilla Parishad Bhavan, Amravati\n\n_Office Hours: 10:00 AM - 6:00 PM (Mon-Sat)_',
     appointmentConfirm: '📋 *Verify Appointment*\n\nPlease confirm your booking details:',
     err_no_record_found: '❌ *No Records Found*\n\nWe could not find any record matching that reference number.',
@@ -268,6 +307,45 @@ const translations = {
     'desc_Water Conservation Department': 'जल संरक्षण और प्रबंधन',
     'desc_Animal Husbandry Department': 'पशुपालन और डेयरी विकास',
     'desc_IT Cell': 'सूचना प्रौद्योगिकी सेवाएं',
+    
+    // Actual department names from database (exact matches) - Hindi
+    'dept_DRDA': 'डीआरडीए',
+    'desc_DRDA': 'ग्रामीण विकास कार्यक्रम',
+    'dept_SAPRAVI': 'सप्रवी',
+    'desc_SAPRAVI': 'उप सीईओ - प्रशासनिक सेवाएं',
+    'dept_Gram Panchayat (Deputy CEO)': 'ग्राम पंचायत (उप सीईओ)',
+    'desc_Gram Panchayat (Deputy CEO)': 'ग्राम पंचायत प्रशासन',
+    'dept_Women & Child Development': 'महिला एवं बाल विकास',
+    'desc_Women & Child Development': 'महिला व बाल कल्याण',
+    'dept_Water & Sanitation / MGNREGA': 'जल और स्वच्छता / मनरेगा',
+    'desc_Water & Sanitation / MGNREGA': 'जल आपूर्ति व रोजगार',
+    'dept_Accounts & Finance': 'लेखा और वित्त',
+    'desc_Accounts & Finance': 'वित्तीय प्रबंधन',
+    'dept_Health': 'स्वास्थ्य',
+    'desc_Health': 'स्वास्थ्य व चिकित्सा सेवाएं',
+    'dept_Social Welfare': 'समाज कल्याण',
+    'desc_Social Welfare': 'कल्याण योजनाएं व सहायता',
+    'dept_Education (Primary)': 'शिक्षा (प्राथमिक)',
+    'desc_Education (Primary)': 'प्राथमिक शिक्षा',
+    'dept_Education (Secondary)': 'शिक्षा (माध्यमिक)',
+    'desc_Education (Secondary)': 'माध्यमिक व उच्च शिक्षा',
+    'dept_Education (Planning)': 'शिक्षा (योजना)',
+    'desc_Education (Planning)': 'शिक्षा योजना',
+    'dept_Construction (EE)': 'निर्माण (कार्यकारी अभियंता)',
+    'desc_Construction (EE)': 'भवन व बुनियादी ढांचा',
+    'dept_Gram Panchayat (EE)': 'ग्राम पंचायत (कार्यकारी अभियंता)',
+    'desc_Gram Panchayat (EE)': 'ग्रामीण बुनियादी ढांचा',
+    'dept_Minor Irrigation': 'लघु सिंचाई',
+    'desc_Minor Irrigation': 'सिंचाई व जल प्रबंधन',
+    'dept_Animal Husbandry': 'पशुपालन',
+    'desc_Animal Husbandry': 'पशुधन व डेयरी',
+    'dept_Agriculture': 'कृषि',
+    'desc_Agriculture': 'कृषि सहायता व योजनाएं',
+    'dept_PS Amravati': 'पंचायत समिति अमरावती',
+    'desc_PS Amravati': 'पंचायत समिति सेवाएं',
+    'dept_PS Achalpur': 'पंचायत समिति अचलपुर',
+    'desc_PS Achalpur': 'पंचायत समिति सेवाएं',
+    
     goodbye: '👋 *धन्यवाद*\n\nजिला परिषद अमरावती से संपर्क करने के लिए धन्यवाद। हम आपकी सेवा में हमेशा तत्पर हैं।\n\n📞 *सहायता के लिए:*\n• कभी भी "Hi" टाइप करें\n• "Help" टाइप करें हेल्पडेस्क जानकारी के लिए\n• "Menu" टाइप करें सभी सेवाएं देखने के लिए\n\n🌐 *वेबसाइट:* zpamravati.gov.in\n📍 *कार्यालय:* जिला परिषद भवन, अमरावती\n\n_कार्यालय समय: सुबह 10:00 - शाम 6:00 (सोम-शनि)_',
     appointmentConfirm: '📋 *नियुक्ति की पुष्टि करें*\n\nकृपया अपने बुकिंग विवरण की पुष्टि करें:',
     err_no_record_found: '❌ *कोई रिकॉर्ड नहीं मिला*\n\nहमें उस संदर्भ संख्या से मेल खाने वाला कोई रिकॉर्ड नहीं मिला।',
@@ -397,6 +475,45 @@ const translations = {
     'desc_Water Conservation Department': 'जल संधारण आणि व्यवस्थापन',
     'desc_Animal Husbandry Department': 'पशुपालन आणि दुग्धव्यवसाय विकास',
     'desc_IT Cell': 'माहिती तंत्रज्ञान सेवा',
+    
+    // Actual department names from database (exact matches) - Marathi
+    'dept_DRDA': 'डीआरडीए',
+    'desc_DRDA': 'ग्रामीण विकास कार्यक्रम',
+    'dept_SAPRAVI': 'सप्रवी',
+    'desc_SAPRAVI': 'उप सीईओ - प्रशासकीय सेवा',
+    'dept_Gram Panchayat (Deputy CEO)': 'ग्राम पंचायत (उप सीईओ)',
+    'desc_Gram Panchayat (Deputy CEO)': 'ग्राम पंचायत प्रशासन',
+    'dept_Women & Child Development': 'महिला आणि बाल विकास',
+    'desc_Women & Child Development': 'महिला व बाल कल्याण',
+    'dept_Water & Sanitation / MGNREGA': 'पाणी आणि स्वच्छता / मनरेगा',
+    'desc_Water & Sanitation / MGNREGA': 'पाणी पुरवठा व रोजगार',
+    'dept_Accounts & Finance': 'लेखा आणि वित्त',
+    'desc_Accounts & Finance': 'आर्थिक व्यवस्थापन',
+    'dept_Health': 'आरोग्य',
+    'desc_Health': 'आरोग्य व वैद्यकीय सेवा',
+    'dept_Social Welfare': 'समाज कल्याण',
+    'desc_Social Welfare': 'कल्याण योजना व सहाय्य',
+    'dept_Education (Primary)': 'शिक्षण (प्राथमिक)',
+    'desc_Education (Primary)': 'प्राथमिक शिक्षण',
+    'dept_Education (Secondary)': 'शिक्षण (माध्यमिक)',
+    'desc_Education (Secondary)': 'माध्यमिक व उच्च शिक्षण',
+    'dept_Education (Planning)': 'शिक्षण (नियोजन)',
+    'desc_Education (Planning)': 'शिक्षण नियोजन',
+    'dept_Construction (EE)': 'बांधकाम (कार्यकारी अभियंता)',
+    'desc_Construction (EE)': 'इमारत व पायाभूत सुविधा',
+    'dept_Gram Panchayat (EE)': 'ग्राम पंचायत (कार्यकारी अभियंता)',
+    'desc_Gram Panchayat (EE)': 'ग्रामीण पायाभूत सुविधा',
+    'dept_Minor Irrigation': 'लघु सिंचन',
+    'desc_Minor Irrigation': 'सिंचन व जल व्यवस्थापन',
+    'dept_Animal Husbandry': 'पशुसंवर्धन',
+    'desc_Animal Husbandry': 'पशुधन व दुग्धव्यवसाय',
+    'dept_Agriculture': 'कृषी',
+    'desc_Agriculture': 'शेती सहाय्य व योजना',
+    'dept_PS Amravati': 'पंचायत समिती अमरावती',
+    'desc_PS Amravati': 'पंचायत समिती सेवा',
+    'dept_PS Achalpur': 'पंचायत समिती अचलपूर',
+    'desc_PS Achalpur': 'पंचायत समिती सेवा',
+    
     goodbye: '👋 *धन्यवाद*\n\nजिल्हा परिषद अमरावतीशी संपर्क साधल्याबद्दल धन्यवाद. आम्ही नेहमी तुमच्या सेवेसाठी तत्पर आहोत.\n\n📞 *मदतीसाठी:*\n• कधीही "Hi" टाइप करा\n• "Help" टाइप करा हेल्पडेस्क माहितीसाठी\n• "Menu" टाइप करा सर्व सेवा पाहण्यासाठी\n\n🌐 *वेबसाइट:* zpamravati.gov.in\n📍 *कार्यालय:* जिल्हा परिषद भवन, अमरावती\n\n_कार्यालय वेळ: सकाळी 10:00 - संध्याकाळी 6:00 (सोम-शनि)_',
     appointmentConfirm: '📋 *अपॉइंटमेंटची पुष्टी करा*\n\nकृपया तुमच्या बुकिंग तपशीलाची पुष्टी करा:',
     err_no_record_found: '❌ *कोणताही रेकॉर्ड सापडला नाही*\n\nआम्हाला त्या संदर्भ क्रमांकाशी जुळणारा कोणताही रेकॉर्ड सापडला नाही.',
@@ -829,7 +946,12 @@ async function continueGrievanceFlow(
           
           // Try to translate description, fallback to database description or empty
           const translatedDesc = getTranslation(`desc_${dept.name}`, session.language);
-          const description = translatedDesc !== `desc_${dept.name}` ? translatedDesc : (dept.description?.substring(0, 72) || '');
+          let description = translatedDesc !== `desc_${dept.name}` ? translatedDesc : (dept.description || '');
+          
+          // Ensure description fits WhatsApp's 72 character limit
+          if (description.length > 72) {
+            description = description.substring(0, 69) + '...';
+          }
           
           return {
             id: `grv_dept_${dept._id}`,
@@ -841,11 +963,13 @@ async function continueGrievanceFlow(
         // Add "Load More" button if there are more departments
         if (showLoadMore) {
           const remainingCount = departments.length - offset - 9;
-          deptRows.push({
-            id: 'grv_load_more',
-            title: getTranslation('btn_load_more', session.language),
-            description: `${remainingCount} ${getTranslation('msg_more_depts_available', session.language)}`
-          });
+          if (remainingCount > 0) {
+            deptRows.push({
+              id: 'grv_load_more',
+              title: getTranslation('btn_load_more', session.language),
+              description: `${remainingCount} ${getTranslation('msg_more_depts_available', session.language)}`
+            });
+          }
         }
         
         // Create sections (WhatsApp requires at least 1 section with 1-10 rows)
@@ -919,7 +1043,12 @@ async function continueGrievanceFlow(
             
             // Try to translate description, fallback to database description or empty
             const translatedDesc = getTranslation(`desc_${dept.name}`, session.language);
-            const description = translatedDesc !== `desc_${dept.name}` ? translatedDesc : (dept.description?.substring(0, 72) || '');
+            let description = translatedDesc !== `desc_${dept.name}` ? translatedDesc : (dept.description || '');
+            
+            // Ensure description fits WhatsApp's 72 character limit
+            if (description.length > 72) {
+              description = description.substring(0, 69) + '...';
+            }
             
             return {
               id: `grv_dept_${dept._id}`,
@@ -930,11 +1059,13 @@ async function continueGrievanceFlow(
           
           if (showLoadMore) {
             const remainingCount = departments.length - offset - 9;
-            deptRows.push({
-              id: 'grv_load_more',
-              title: getTranslation('btn_load_more', session.language),
-              description: `${remainingCount} ${getTranslation('msg_more_depts_available', session.language)}`
-            });
+            if (remainingCount > 0) {
+              deptRows.push({
+                id: 'grv_load_more',
+                title: getTranslation('btn_load_more', session.language),
+                description: `${remainingCount} ${getTranslation('msg_more_depts_available', session.language)}`
+              });
+            }
           }
           
           const sections = [{
