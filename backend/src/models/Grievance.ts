@@ -30,6 +30,7 @@ export interface IGrievance extends Document {
     uploadedAt: Date;
   }>;
   resolution?: string;
+  resolutionDocumentUrl?: string;
   resolvedAt?: Date;
   closedAt?: Date;
   slaBreached: boolean;
@@ -145,6 +146,9 @@ const GrievanceSchema: Schema = new Schema(
       }
     }],
     resolution: {
+      type: String
+    },
+    resolutionDocumentUrl: {
       type: String
     },
     resolvedAt: {

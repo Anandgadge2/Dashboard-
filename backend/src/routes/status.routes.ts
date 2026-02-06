@@ -49,7 +49,7 @@ const getStatusMessage = (type: 'grievance' | 'appointment', id: string, status:
 router.put('/grievance/:id', requirePermission(Permission.STATUS_CHANGE_GRIEVANCE, Permission.UPDATE_GRIEVANCE), async (req: Request, res: Response) => {
   try {
     const currentUser = req.user!;
-    const { status, remarks } = req.body;
+    const { status, remarks, resolutionDocumentUrl } = req.body;
 
     if (!status) {
       return res.status(400).json({
@@ -69,7 +69,7 @@ router.put('/grievance/:id', requirePermission(Permission.STATUS_CHANGE_GRIEVANC
 
     // Operators can only update status and remarks - validate request body
     if (currentUser.role === UserRole.OPERATOR) {
-      const allowedFields = ['status', 'remarks'];
+      const allowedFields = ['status', 'remarks', 'resolutionDocumentUrl'];
       const providedFields = Object.keys(req.body);
       const invalidFields = providedFields.filter(field => !allowedFields.includes(field));
       
@@ -132,6 +132,10 @@ router.put('/grievance/:id', requirePermission(Permission.STATUS_CHANGE_GRIEVANC
       changedAt: new Date()
     });
 
+    if (resolutionDocumentUrl && status === GrievanceStatus.RESOLVED) {
+      grievance.resolutionDocumentUrl = resolutionDocumentUrl;
+    }
+
     // Update timestamps based on status
     if (status === GrievanceStatus.RESOLVED && !grievance.resolvedAt) {
       grievance.resolvedAt = new Date();
@@ -168,6 +172,7 @@ router.put('/grievance/:id', requirePermission(Permission.STATUS_CHANGE_GRIEVANC
         departmentId: grievance.departmentId,
         companyId: grievance.companyId,
         remarks: remarks,
+        resolutionDocumentUrl: resolutionDocumentUrl || grievance.resolutionDocumentUrl,
         resolvedBy: currentUser._id,
         resolvedAt: grievance.resolvedAt,
         createdAt: grievance.createdAt,

@@ -365,6 +365,7 @@ interface NotificationData {
   assignedAt?: Date | string;
   appointmentDate?: Date | string;
   appointmentTime?: string;
+  resolutionDocumentUrl?: string;
   timeline?: Array<{
     action: string;
     details?: any;
@@ -838,6 +839,9 @@ export async function notifyCitizenOnResolution(
     const resolutionTimeTextFormatted = resolutionTimeText 
       ? `\n⏱️ *Resolution Time:* ${resolutionTimeText}\n` 
       : '';
+    const documentText = data.resolutionDocumentUrl
+      ? `\n📄 *Resolution Document:*\n${data.resolutionDocumentUrl}\n`
+      : '';
 
     const message =
       `*${company.name}*\n` +
@@ -850,7 +854,7 @@ export async function notifyCitizenOnResolution(
       `🏢 *Department:* ${departmentName}\n` +
       `📊 *Status:* RESOLVED\n` +
       `👨‍💼 *Resolved By:* ${resolvedByName}\n` +
-      `📅 *Resolved On:* ${formattedResolvedDate}${resolutionTimeTextFormatted}${remarksText}` +
+      `📅 *Resolved On:* ${formattedResolvedDate}${resolutionTimeTextFormatted}${remarksText}${documentText}` +
       `\n*Timeline Summary:*\n` +
       `${data.createdAt ? `📝 Created: ${formatDateTimeIST(data.createdAt, { month: 'short' })}\n` : ''}` +
       `${data.assignedAt ? `👤 Assigned: ${formatDateTimeIST(data.assignedAt, { month: 'short' })}\n` : ''}` +

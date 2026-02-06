@@ -246,8 +246,8 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50 rounded-none sm:rounded-3xl shadow-2xl w-full max-w-full sm:max-w-5xl h-full sm:max-h-[90vh] overflow-hidden border-0 sm:border border-slate-200/50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50 rounded-none sm:rounded-3xl shadow-2xl w-full max-w-full sm:max-w-5xl h-full sm:max-h-[90vh] overflow-hidden border-0 sm:border border-slate-200/50 flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 px-6 py-5 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30"></div>
@@ -257,8 +257,8 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
                 <CalendarDays className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">Appointment Availability</h2>
-                <p className="text-white/80 text-sm mt-0.5">Configure when appointments can be scheduled</p>
+                <h2 className="text-2xl font-black tracking-tight drop-shadow-sm">Appointment Availability</h2>
+                <p className="text-white/90 text-sm mt-0.5 font-medium">Configure your booking schedule with ease</p>
               </div>
             </div>
             <Button
@@ -344,19 +344,25 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
                                 type="button"
                                 onClick={() => updateDayAvailability(day.key, { isAvailable: !dayAvailability.isAvailable })}
                                 title={dayAvailability.isAvailable ? 'Mark unavailable' : 'Mark available'}
-                                className={`w-12 h-7 rounded-full transition-all relative flex-shrink-0 ${
+                                className={`w-14 h-8 rounded-full transition-all duration-300 relative flex-shrink-0 ${
                                   dayAvailability.isAvailable
-                                    ? 'bg-emerald-500'
-                                    : 'bg-slate-300'
-                                }`}
+                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-100'
+                                    : 'bg-gradient-to-r from-slate-300 to-slate-400 shadow-md shadow-slate-100'
+                                } hover:scale-105 active:scale-95`}
                               >
                                 <span
-                                  className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all ${
-                                    dayAvailability.isAvailable ? 'left-6' : 'left-1'
+                                  className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-all duration-300 flex items-center justify-center ${
+                                    dayAvailability.isAvailable ? 'left-7' : 'left-1'
                                   }`}
-                                />
+                                >
+                                  {dayAvailability.isAvailable ? (
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <XCircle className="w-3.5 h-3.5 text-slate-400" />
+                                  )}
+                                </span>
                               </button>
-                              <span className={`text-[10px] font-semibold ${dayAvailability.isAvailable ? 'text-emerald-600' : 'text-slate-400'}`}>
+                              <span className={`text-xs font-bold transition-colors duration-300 ${dayAvailability.isAvailable ? 'text-emerald-600' : 'text-slate-400'}`}>
                                 {dayAvailability.isAvailable ? 'Available' : 'Unavailable'}
                               </span>
                             </div>
@@ -460,11 +466,15 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
                             )}
 
                             {!isPast && !specialDate && (
-                              <div className="absolute bottom-1 right-1">
+                              <div className="absolute bottom-1.5 right-1.5">
                                 {isAvailable ? (
-                                  <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                  <div className="bg-emerald-100/80 p-0.5 rounded-full backdrop-blur-sm">
+                                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                  </div>
                                 ) : (
-                                  <XCircle className="w-3 h-3 text-slate-300" />
+                                  <div className="bg-slate-100/80 p-0.5 rounded-full backdrop-blur-sm">
+                                    <XCircle className="w-4 h-4 text-slate-400" />
+                                  </div>
                                 )}
                               </div>
                             )}
@@ -512,34 +522,51 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
                           const currentlyAvailable = specialDate ? specialDate.isAvailable : daySchedule?.isAvailable ?? false;
                           return (
                             <div className="flex flex-col sm:flex-row items-center gap-4">
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-4">
                                 <span className="text-sm font-medium text-slate-600">Status:</span>
-                                <button
-                                  type="button"
-                                  disabled={togglingDate}
-                                  onClick={() => setSelectedDateAvailability(true)}
-                                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all border-2 ${
-                                    currentlyAvailable && !specialDate
-                                      ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
-                                      : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50'
-                                  } ${togglingDate ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                  <CheckCircle className="w-4 h-4" />
-                                  Available
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={togglingDate}
-                                  onClick={() => setSelectedDateAvailability(false)}
-                                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all border-2 ${
-                                    specialDate && !specialDate.isAvailable
-                                      ? 'bg-slate-600 text-white border-slate-600 shadow-md'
-                                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:bg-slate-50'
-                                  } ${togglingDate ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                  Unavailable
-                                </button>
+                                
+                                <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl border-2 transition-all duration-300 ${
+                                  currentlyAvailable 
+                                    ? 'bg-emerald-50/50 border-emerald-200 shadow-sm shadow-emerald-100/50' 
+                                    : 'bg-rose-50/50 border-rose-200 shadow-sm shadow-rose-100/50'
+                                }`}>
+                                  <div className="flex items-center gap-4">
+                                    <span className={`text-sm font-bold transition-colors duration-300 ${!currentlyAvailable ? 'text-rose-600' : 'text-slate-400'}`}>
+                                      Unavailable
+                                    </span>
+                                    
+                                    <button
+                                      type="button"
+                                      disabled={togglingDate}
+                                      onClick={() => {
+                                        const newStatus = !currentlyAvailable;
+                                        setSelectedDateAvailability(newStatus);
+                                        setHasChanges(true);
+                                      }}
+                                      className={`w-14 h-8 rounded-full transition-all duration-300 relative flex-shrink-0 ${
+                                        currentlyAvailable
+                                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-100'
+                                          : 'bg-gradient-to-r from-slate-300 to-slate-400 shadow-md shadow-slate-100'
+                                      } ${togglingDate ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
+                                    >
+                                      <div
+                                        className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-sm transition-transform duration-300 flex items-center justify-center ${
+                                          currentlyAvailable ? 'translate-x-[24px]' : 'translate-x-0'
+                                        }`}
+                                      >
+                                        {currentlyAvailable ? (
+                                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                                        ) : (
+                                          <XCircle className="w-3.5 h-3.5 text-slate-400" />
+                                        )}
+                                      </div>
+                                    </button>
+                                    
+                                    <span className={`text-sm font-bold transition-colors duration-300 ${currentlyAvailable ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                      Available
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                               {specialDate && (
                                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -681,22 +708,21 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 bg-white/80 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
-          <div className="text-sm text-slate-500">
+        <div className="border-t border-slate-200 bg-white/95 backdrop-blur-md px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center gap-4 sm:justify-between mt-auto flex-shrink-0">
+          <div className="flex items-center gap-2 order-2 sm:order-1">
             {hasChanges && (
-              <span className="flex items-center gap-2 text-amber-600">
+              <span className="flex items-center gap-2 animate-pulse font-bold text-amber-600 text-xs sm:text-sm bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
                 <AlertCircle className="w-4 h-4" />
-                You have unsaved changes
+                Unsaved Changes
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 order-1 sm:order-2 w-full sm:w-auto justify-center sm:justify-end flex-shrink-0">
             <Button
               variant="outline"
               onClick={handleReset}
               disabled={!hasChanges || saving}
-              title="Reset changes to last saved state"
-              className="border-slate-300"
+              className="border-slate-300 hover:bg-slate-50 hover:text-slate-900 px-5 sm:px-6 rounded-xl transition-all duration-200 disabled:opacity-50 text-xs sm:text-sm font-bold h-10 sm:h-12 shadow-sm whitespace-nowrap"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
@@ -704,8 +730,7 @@ export default function AvailabilityCalendar({ isOpen, onClose, departmentId }: 
             <Button
               onClick={handleSave}
               disabled={!hasChanges || saving}
-              title="Save your availability settings"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-200"
+              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-600 text-white shadow-xl shadow-indigo-200/40 border-0 px-6 sm:px-10 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:shadow-none font-black text-xs sm:text-sm h-10 sm:h-12 whitespace-nowrap"
             >
               {saving ? (
                 <>

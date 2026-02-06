@@ -31,6 +31,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 import assignmentRoutes from './routes/assignment.routes';
 import statusRoutes from './routes/status.routes';
 import availabilityRoutes from './routes/availability.routes';
+import uploadRoutes from './routes/upload.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -116,6 +117,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/status', statusRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // ================================
 // Error Handling

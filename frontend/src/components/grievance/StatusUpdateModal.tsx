@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, AlertCircle, Clock, MessageSquare, Calendar } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Clock, MessageSquare, Calendar, Upload, FileText, Trash2 } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import toast from 'react-hot-toast';
 
@@ -47,6 +47,8 @@ export default function StatusUpdateModal({
   const [showSetTimeModal, setShowSetTimeModal] = useState(false);
   const [confirmedTime, setConfirmedTime] = useState('');
   const [confirmedDate, setConfirmedDate] = useState('');
+  const [resolutionDocument, setResolutionDocument] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const statuses = itemType === 'grievance' ? grievanceStatuses : appointmentStatuses;
 
@@ -73,6 +75,7 @@ export default function StatusUpdateModal({
       } else {
         setConfirmedTime('');
       }
+      setResolutionDocument(null);
     }
   }, [isOpen, currentStatus, initialAppointmentDate, initialAppointmentTime]);
 
@@ -113,10 +116,39 @@ export default function StatusUpdateModal({
 
     try {
       setSubmitting(true);
-      const body: { status: string; remarks: string; appointmentTime?: string; appointmentDate?: string } = {
+      
+      // Upload document first if provided
+      let documentUrl = '';
+      if (resolutionDocument && itemType === 'grievance' && selectedStatus === 'RESOLVED') {
+        try {
+          setUploading(true);
+          const formData = new FormData();
+          formData.append('document', resolutionDocument);
+          
+          const uploadResponse = await apiClient.post('/uploads', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          
+          if (uploadResponse.success && uploadResponse.data?.url) {
+            documentUrl = uploadResponse.data.url;
+          }
+        } catch (uploadError) {
+          console.error('Document upload failed:', uploadError);
+          toast.error('Failed to upload document, but continuing with status update');
+        } finally {
+          setUploading(false);
+        }
+      }
+      
+      const body: { status: string; remarks: string; appointmentTime?: string; appointmentDate?: string; resolutionDocumentUrl?: string } = {
         status: selectedStatus,
         remarks
       };
+      
+      if (documentUrl) {
+        body.resolutionDocumentUrl = documentUrl;
+      }
+      
       if (itemType === 'appointment' && selectedStatus === 'CONFIRMED' && confirmedTime && confirmedDate) {
         body.appointmentTime = confirmedTime;
         body.appointmentDate = new Date(confirmedDate).toISOString();
@@ -147,6 +179,29 @@ export default function StatusUpdateModal({
     if (itemType === 'appointment' && value === 'CONFIRMED') {
       setShowSetTimeModal(true);
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only PDF, JPG, PNG, and DOC files are allowed');
+        return;
+      }
+      setResolutionDocument(file);
+      toast.success('Document selected');
+    }
+  };
+
+  const handleRemoveDocument = () => {
+    setResolutionDocument(null);
   };
 
   if (!isOpen) return null;
@@ -195,8 +250,8 @@ export default function StatusUpdateModal({
 
           {/* Status Selection */}
           <div>
-            <label className="block text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-4">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-200"></span>
               Select New Status
               <span className="text-red-500 text-xs font-normal">*</span>
             </label>
@@ -229,7 +284,7 @@ export default function StatusUpdateModal({
           {/* Set confirmed time (appointment + Confirmed only) - inline summary + opens Set Time dialog */}
           {itemType === 'appointment' && selectedStatus === 'CONFIRMED' && (
             <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/30 rounded-2xl p-6 border-2 border-emerald-200 shadow-sm">
-              <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-3">
                 <Calendar className="w-4 h-4 text-emerald-600" />
                 Confirmed date & time
                 <span className="text-red-500 text-xs font-normal">*</span>
@@ -250,9 +305,63 @@ export default function StatusUpdateModal({
             </div>
           )}
 
+          {/* Upload Resolution Document (grievance + Resolved only) */}
+          {itemType === 'grievance' && selectedStatus === 'RESOLVED' && (
+            <div className="bg-gradient-to-br from-green-50 via-emerald-50/50 to-teal-50/30 rounded-2xl p-6 border-2 border-green-200 shadow-sm">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-3">
+                <FileText className="w-4 h-4 text-green-600" />
+                Resolution Document
+                <span className="text-xs font-normal text-gray-500 ml-1">(Optional)</span>
+              </label>
+              <p className="text-xs text-gray-600 mb-4">
+                Upload a document (PDF, JPG, PNG, DOC) related to the resolution. This will be sent to the citizen via WhatsApp.
+              </p>
+              
+              {!resolutionDocument ? (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-green-300 rounded-xl cursor-pointer bg-white hover:bg-green-50 transition-all group">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-10 h-10 text-green-500 mb-2 group-hover:scale-110 transition-transform" />
+                    <p className="text-sm text-gray-600 font-semibold">Click to upload document</p>
+                    <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG, DOC (Max 10MB)</p>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={handleFileSelect}
+                  />
+                </label>
+              ) : (
+                <div className="flex items-center justify-between p-4 bg-white border-2 border-green-300 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-gray-900 truncate max-w-xs">
+                        {resolutionDocument.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(resolutionDocument.size / 1024).toFixed(2)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveDocument}
+                    className="p-2 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors"
+                    title="Remove document"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Remarks Section - Enhanced */}
           <div className="bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/30 rounded-2xl p-6 border-2 border-slate-200 shadow-sm">
-            <label className="block text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-4">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
               Remarks / Notes
               <span className="text-xs font-normal text-gray-500 ml-1">(Optional but recommended)</span>
