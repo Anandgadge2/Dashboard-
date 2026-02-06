@@ -81,7 +81,9 @@ const translations = {
     selection_department: '🏢 *Department Selection*\n\nSelect the relevant department:',
     btn_select_dept: 'View Departments',
     btn_load_more: 'Load More Departments',
+    msg_more_depts_available: 'more departments available',
     err_name_invalid: '⚠️ *Invalid Name*\n\nPlease enter a valid full name (min 2 chars).',
+    err_invalid_selection: '⚠️ *Invalid Selection*\n\nPlease select a valid option from the list provided or use the buttons.',
     err_description_short: '⚠️ *Insufficient Details*\n\nPlease provide more details (min 10 chars) to help us understand the issue.',
     err_purpose_short: '⚠️ *Purpose Required*\n\nPlease specify the purpose of the visit (min 5 chars).',
     msg_type_address: '📍 Please type the address:',
@@ -98,6 +100,8 @@ const translations = {
     label_apt_header: '📅 *New Appointment Request*\n\nPlease enter your Full Name (as per official records):',
     label_select_date: '🗓️ *Select Date*\n\nChoose a convenient date:',
     label_select_time: '⏰ *Select Time Slot*\n\nChoose a time for your visit:',
+    label_appointment_purpose: '🎯 *Meeting Purpose*\n\nPlease briefly describe the purpose of your meeting with the CEO:',
+    msg_no_dates: '⚠️ *No Available Dates*\n\nCurrently, there are no available dates for appointment booking. Please try again later or contact the office directly.',
      // Department names (for dynamic translation)
     'dept_Health Department': 'Health Department',
     'dept_Education Department': 'Education Department',
@@ -203,7 +207,9 @@ const translations = {
     selection_department: '🏢 *विभाग चयन*\n\nसंबंधित विभाग का चयन करें:',
     btn_select_dept: 'विभाग देखें',
     btn_load_more: 'और विभाग देखें',
+    msg_more_depts_available: 'और विभाग उपलब्ध हैं',
     err_name_invalid: '⚠️ *अमान्य नाम*\n\nकृपया एक मान्य पूरा नाम दर्ज करें (न्यूनतम 2 अक्षर)।',
+    err_invalid_selection: '⚠️ *अमान्य चयन*\n\nकृपया दी गई सूची से एक वैध विकल्प चुनें या बटन का उपयोग करें।',
     err_description_short: '⚠️ *अपर्याप्त विवरण*\n\nकृपया समस्या को समझने में हमारी सहायता के लिए अधिक विवरण (न्यूनतम 10 अक्षर) प्रदान करें।',
     err_purpose_short: '⚠️ *उद्देश्य आवश्यक*\n\nकृपया यात्रा का उद्देश्य निर्दिष्ट करें (न्यूनतम 5 अक्षर)।',
     msg_type_address: '📍 कृपया पता टाइप करें:',
@@ -220,6 +226,8 @@ const translations = {
     label_apt_header: '📅 *नई नियुक्ति*\n\nविभाग: *{dept}*\n\nकृपया अपना पूरा नाम दर्ज करें:',
     label_select_date: '🗓️ *दिनांक चुनें*\n\nएक सुविधाजनक तारीख चुनें:',
     label_select_time: '⏰ *समय स्लॉट चुनें*\n\nअपनी यात्रा के लिए एक समय चुनें:',
+    label_appointment_purpose: '🎯 *बैठक का उद्देश्य*\n\nकृपया सीईओ के साथ अपनी बैठक के उद्देश्य का संक्षिप्त विवरण दें:',
+    msg_no_dates: '⚠️ *कोई उपलब्ध तारीख नहीं*\n\nवर्तमान में, नियुक्ति बुकिंग के लिए कोई उपलब्ध तारीख नहीं है। कृपया बाद में पुनः प्रयास करें या सीधे कार्यालय से संपर्क करें।',
 
     // Department names in Hindi
     'dept_Health Department': 'स्वास्थ्य विभाग',
@@ -329,7 +337,9 @@ const translations = {
     selection_department: '🏢 *विभाग निवड*\n\nसंबंधित विभाग निवडा:',
     btn_select_dept: 'विभाग पहा',
     btn_load_more: 'अधिक विभाग पहा',
+    msg_more_depts_available: 'अधिक विभाग उपलब्ध आहेत',
     err_name_invalid: '⚠️ *अवैध नाव*\n\nकृपया वैध पूर्ण नाव प्रविष्ट करा (किमान २ अक्षरे).',
+    err_invalid_selection: '⚠️ *अवैध निवड*\n\nकृपया दिलेल्या यादीतून वैध पर्याय निवडा किंवा बटणे वापरा.',
     err_description_short: '⚠️ *अपुरा तपशील*\n\nकृपया समस्या समजून घेण्यात आम्हाला मदत करण्यासाठी अधिक तपशील (किमान १० अक्षरे) द्या.',
     err_purpose_short: '⚠️ *उद्देश आवश्यक*\n\nकृपया भेटीचा उद्देश नमूद करा (किमान ५ अक्षरे).',
     msg_type_address: '📍 कृपया पत्ता टाइप करा:',
@@ -346,6 +356,8 @@ const translations = {
     label_apt_header: '📅 *नवीन अपॉइंटमेंट*\n\nविभाग: *{dept}*\n\nकृपया तुमचे पूर्ण नाव प्रविष्ट करा:',
     label_select_date: '🗓️ *दिनांक निवडा*\n\nसोयीस्कर तारीख निवडा:',
     label_select_time: '⏰ *वेळ स्लॉट निवडा*\n\nतुमच्या भेटीसाठी वेळ निवडा:',
+    label_appointment_purpose: '🎯 *भेटीचा उद्देश*\n\nकृपया सीईओ सोबतच्या भेटीचा उद्देश संक्षिप्तपणे वर्णन करा:',
+    msg_no_dates: '⚠️ *कोणत्याही उपलब्ध तारखा नाहीत*\n\nसध्या, अपॉइंटमेंट बुकिंगसाठी कोणत्याही उपलब्ध तारखा नाहीत. कृपया नंतर पुन्हा प्रयत्न करा किंवा थेट कार्यालयाशी संपर्क साधा.',
     // Department names in Marathi
     'dept_Health Department': 'आरोग्य विभाग',
     'dept_Education Department': 'शिक्षण विभाग',
@@ -815,19 +827,24 @@ async function continueGrievanceFlow(
           const translatedName = getTranslation(`dept_${dept.name}`, session.language);
           const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
           
+          // Try to translate description, fallback to database description or empty
+          const translatedDesc = getTranslation(`desc_${dept.name}`, session.language);
+          const description = translatedDesc !== `desc_${dept.name}` ? translatedDesc : (dept.description?.substring(0, 72) || '');
+          
           return {
             id: `grv_dept_${dept._id}`,
             title: displayName.length > 24 ? displayName.substring(0, 21) + '...' : displayName,
-            description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || ''
+            description: description
           };
         });
         
         // Add "Load More" button if there are more departments
         if (showLoadMore) {
+          const remainingCount = departments.length - offset - 9;
           deptRows.push({
             id: 'grv_load_more',
             title: getTranslation('btn_load_more', session.language),
-            description: `${departments.length - offset - 9} more departments available`
+            description: `${remainingCount} ${getTranslation('msg_more_depts_available', session.language)}`
           });
         }
         
@@ -900,18 +917,23 @@ async function continueGrievanceFlow(
             const translatedName = getTranslation(`dept_${dept.name}`, session.language);
             const displayName = translatedName !== `dept_${dept.name}` ? translatedName : dept.name;
             
+            // Try to translate description, fallback to database description or empty
+            const translatedDesc = getTranslation(`desc_${dept.name}`, session.language);
+            const description = translatedDesc !== `desc_${dept.name}` ? translatedDesc : (dept.description?.substring(0, 72) || '');
+            
             return {
               id: `grv_dept_${dept._id}`,
               title: displayName.length > 24 ? displayName.substring(0, 21) + '...' : displayName,
-              description: getTranslation(`desc_${dept.name}`, session.language) || dept.description?.substring(0, 72) || ''
+              description: description
             };
           });
           
           if (showLoadMore) {
+            const remainingCount = departments.length - offset - 9;
             deptRows.push({
               id: 'grv_load_more',
               title: getTranslation('btn_load_more', session.language),
-              description: `${departments.length - offset - 9} more departments available`
+              description: `${remainingCount} ${getTranslation('msg_more_depts_available', session.language)}`
             });
           }
           
@@ -948,9 +970,17 @@ async function continueGrievanceFlow(
         
         console.log('✅ Department found:', { name: selectedDept.name, id: selectedDeptId });
       } else {
-        // Fallback if department not found
-        session.data.category = userInput || 'General';
-        console.log('⚠️ Department not found, using fallback');
+        // Invalid selection - show error and return to department selection
+        console.log('⚠️ Invalid department selection:', selectedDeptId);
+        await sendWhatsAppMessage(
+          company,
+          message.from,
+          getTranslation('err_invalid_selection', session.language)
+        );
+        // Reset to show department list again
+        session.step = 'grievance_name';
+        await updateSession(session);
+        return;
       }
       
 
@@ -1523,7 +1553,7 @@ async function continueAppointmentFlow(
       await sendWhatsAppMessage(
         company,
         message.from,
-        'Please briefly describe the purpose of your meeting with the CEO:'
+        getTranslation('label_appointment_purpose', session.language)
       );
       
       session.step = 'appointment_purpose';
